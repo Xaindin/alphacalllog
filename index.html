@@ -275,7 +275,6 @@
       <a href="#sec-personal">Personal</a>
       <a href="#sec-family">Family</a>
       <a href="#sec-calls">Calls</a>
-      <a href="#sec-stage">Stage</a>
       <a href="#sec-bank">Bank</a>
       <a href="#sec-assets">Assets</a>
       <div class="l2-right">
@@ -386,37 +385,6 @@
         </table>
       </div>
       <div style="margin-top:8px"><button type="button" class="btn" onclick="L2.addCallRow()">+ Add Call</button></div>
-    </div>
-
-    <!-- Stage -->
-    <div id="sec-stage" class="card">
-      <h3 style="margin:4px 0 12px 0">Client Stage (According to the Script)</h3>
-      <div class="grid">
-        <div class="col-3">
-          <label><input type="checkbox" name="stage_whatsapp"> WhatsApp</label>
-          <label><input type="checkbox" name="stage_idPhoto"> ID Photo</label>
-          <label><input type="checkbox" name="stage_frontId"> Front ID</label>
-          <label><input type="checkbox" name="stage_backId"> Back ID</label>
-        </div>
-        <div class="col-3">
-          <label><input type="checkbox" name="stage_cis"> CIS</label>
-          <label><input type="checkbox" name="stage_mainSuspect"> Main Suspect</label>
-          <label><input type="checkbox" name="stage_evidence"> Evidence</label>
-          <label><input type="checkbox" name="stage_cLetter"> C Letter</label>
-        </div>
-        <div class="col-3">
-          <label><input type="checkbox" name="stage_nSecret"> National Secret</label>
-          <label><input type="checkbox" name="stage_nsRules"> N.S. Rules & Regulations</label>
-          <label><input type="checkbox" name="stage_nsExplained"> N.S. Explained</label>
-          <label><input type="checkbox" name="stage_oath"> Oath</label>
-        </div>
-        <div class="col-3">
-          <label><input type="checkbox" name="stage_arrestWarrantExp"> Arrest Warrant Exp.</label>
-          <label><input type="checkbox" name="stage_arrestWarrantLetter"> Arrest Warrant Letter</label>
-          <label><input type="checkbox" name="stage_priority"> Priority</label>
-          <label><input type="checkbox" name="stage_request"> Request</label>
-        </div>
-      </div>
     </div>
 
     <!-- Bank -->
@@ -951,21 +919,6 @@ function generateLine2PDF(){
     ['Place of Birth', v('pob')], ['Nationality', v('nationality')],
     ['Visa Rejected (Y/N)', v('visaRejected')], ['Overstay (Y/N)', v('overstayYN')]
   ]);
-
-  // Stage checklist (compact table)
-  const stageKeys = ['whatsapp','idPhoto','frontId','backId','cis','mainSuspect','evidence','cLetter','nSecret','nsRules','nsExplained','oath','arrestWarrantExp','arrestWarrantLetter','priority','request'];
-  const stageRows = stageKeys.map(k=>[k, (form.elements['stage_'+k]||{}).checked ? 'Yes' : '' ]);
-  addSectionHeader('Client Stage');
-  doc.autoTable({
-    startY:y,
-    head:[["Stage Item","Done"]],
-    body:stageRows,
-    styles:{font:'helvetica', fontSize:9, cellPadding:2},
-    headStyles:{fillColor:[39, 39, 87], textColor:255},
-    theme:'grid',
-    margin:{left:margin, right:margin}
-  });
-  y = doc.lastAutoTable.finalY + 6;
 
   // Family
   const fam = L2.tableToArray(document.querySelector('#l2_familyTable tbody'), ['member','age','job','workTime','homeTime','workOff','remarks','expectedVisitors']);
