@@ -583,14 +583,14 @@ document.querySelectorAll('.tab').forEach(btn=>{
 /* Fill Line 1 IDs: X1, X3, ... X51 (odd numbers) */
 (function(){
   const sel = document.getElementById('l1_slot');
-  for(let i=1;i<=31;i+=2){ const v='X'+i; sel.add(new Option(v,v)); }
+  for(let i=1;i<=51;i+=2){ const v='X'+i; sel.add(new Option(v,v)); }
 })();
 
-/* Populate Line2's Line1 (odd X1–X31) / Line2 (even X2–X32) */
+/* Populate Line2's Line1 (odd X1–X51) / Line2 (even X2–X32) */
 (function(){
   const l1 = document.getElementById('l2_line1');
   const l2 = document.getElementById('l2_line2');
-  for(let i=1;i<=31;i+=2){ const id='X'+i; l1.add(new Option(id,id)); }
+  for(let i=1;i<=51;i+=2){ const id='X'+i; l1.add(new Option(id,id)); }
   for(let i=2;i<=32;i+=2){ const id='X'+i; l2.add(new Option(id,id)); }
 })();
 
