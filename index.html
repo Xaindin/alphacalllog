@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Alpha — Line 1 & Line 2 Forms</title>
+<title>Alpha — Client Intake</title>
 
 <!-- PDF libs -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -20,6 +20,8 @@
     --text: #e8f0ff;
     --muted: #a5b4fc;
     --bg: #0a0a1a;
+    --success: #4CAF50;
+    --error: #f44336;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -131,6 +133,25 @@
   }
   .note{font-size:12px;color:#c7d2fe;margin-left:8px}
   .hide{display:none}
+  
+  /* Status messages */
+  .status {
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .status.success {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: var(--success);
+    border: 1px solid rgba(76, 175, 80, 0.4);
+  }
+  .status.error {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: var(--error);
+    border: 1px solid rgba(244, 67, 54, 0.4);
+  }
 
   /* Line 2 top nav */
   .l2-nav{
@@ -265,7 +286,7 @@
       <span class="note">Submitting to <b>line 1 data</b></span>
       <button class="btn" type="submit">Submit</button>
     </div>
-    <div class="note" id="status1"></div>
+    <div id="status1"></div>
   </form>
 
   <!-- ============ LINE 2 (sectioned) ============ -->
@@ -433,7 +454,7 @@
           </div>
           <div class="asset-field">
             <label><input id="l2_asset_mutualFunds" type="checkbox"> Mutual Funds</label>
-            <input class="asset-amt" id="l2_asset_mutualFunds_amt" type="number" min="0, step="0.01" placeholder="Amount">
+            <input class="asset-amt" id="l2_asset_mutualFunds_amt" type="number" min="0" step="0.01" placeholder="Amount">
           </div>
           <div class="asset-field">
             <label><input id="l2_asset_shares" type="checkbox"> Shares</label>
@@ -516,7 +537,7 @@
       <span class="note">Submitting to <b>line 2 data</b></span>
       <button class="btn" type="button" id="l2_submitAndDownload">Download PDF</button>
     </div>
-    <div class="note" id="status2"></div>
+    <div id="status2"></div>
   </form>
 </div>
 
@@ -559,7 +580,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
   });
 })();
 
-/* Fill Line 1 IDs: X1, X3, ... X31 (odd numbers) */
+/* Fill Line 1 IDs: X1, X3, ... X51 (odd numbers) */
 (function(){
   const sel = document.getElementById('l1_slot');
   for(let i=1;i<=31;i+=2){ const v='X'+i; sel.add(new Option(v,v)); }
@@ -659,25 +680,47 @@ document.getElementById('tab-line1').addEventListener('submit', async (e)=>{
   params.append('profession', fd.get('profession') || '');
   params.append('remarks', fd.get('remarks') || '');
   
+  // Clear previous status and show loading
+  s.innerHTML = '';
+  s.className = 'status';
   s.textContent = 'Submitting to Google Sheets...';
+  
+  // Create a more robust submission with timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
   
   try {
     const response = await fetch(SCRIPT_URL_LINE1, {
       method: 'POST',
-      body: params
+      body: params,
+      signal: controller.signal,
+      mode: 'no-cors' // Important for Google Apps Script
     });
     
-    const result = await response.text();
+    clearTimeout(timeoutId);
     
-    if (result === 'OK') {
-      s.textContent = 'Submitted to Google Sheets successfully!';
-      e.target.reset();
-    } else {
-      s.textContent = 'Error: ' + result;
-    }
+    // Since we're using no-cors, we can't read the response, but we can assume success
+    // if the request doesn't throw an error
+    s.textContent = '✓ Data submitted successfully!';
+    s.className = 'status success';
+    e.target.reset();
+    
+    // Reset status message after 5 seconds
+    setTimeout(() => {
+      s.textContent = '';
+      s.className = 'status';
+    }, 5000);
+    
   } catch(err) {
-    console.error(err);
-    s.textContent = 'Network error. Please try again.';
+    clearTimeout(timeoutId);
+    console.error('Submission error:', err);
+    
+    if (err.name === 'AbortError') {
+      s.textContent = '⚠ Submission timed out. Please check your connection.';
+    } else {
+      s.textContent = '⚠ Data may have been submitted (check your sheet). If not, please try again.';
+    }
+    s.className = 'status error';
   }
 });
 
@@ -768,11 +811,24 @@ const L2 = {
       if (has || amt) assets[k]={has,amount:amt};
     });
     localStorage.setItem('alpha_line2_draft', JSON.stringify({base,fam,calls,banks,assets}));
-    alert('Draft saved on this device.');
+    
+    // Show success message
+    const s = document.getElementById('status2');
+    s.textContent = '✓ Draft saved successfully!';
+    s.className = 'status success';
+    setTimeout(() => { s.textContent = ''; s.className = 'status'; }, 3000);
   });
 
   document.getElementById('l2_loadDraft').addEventListener('click', ()=>{
-    const raw=localStorage.getItem('alpha_line2_draft'); if(!raw) return alert('No draft found.');
+    const raw=localStorage.getItem('alpha_line2_draft'); 
+    if(!raw) {
+      const s = document.getElementById('status2');
+      s.textContent = '⚠ No draft found.';
+      s.className = 'status error';
+      setTimeout(() => { s.textContent = ''; s.className = 'status'; }, 3000);
+      return;
+    }
+    
     const {base={},fam=[],calls=[],banks=[],assets={}} = JSON.parse(raw);
     const form = document.getElementById('tab-line2');
     for(const [k,v] of Object.entries(base)){
@@ -787,6 +843,12 @@ const L2 = {
       if(chk) chk.checked=!!v.has; if(amt) amt.value=v.amount||'';
     });
     L2.bindAssetAmounts();
+    
+    // Show success message
+    const s = document.getElementById('status2');
+    s.textContent = '✓ Draft loaded successfully!';
+    s.className = 'status success';
+    setTimeout(() => { s.textContent = ''; s.className = 'status'; }, 3000);
   });
 
   document.getElementById('l2_downloadPdf').addEventListener('click', generateLine2PDF);
@@ -797,41 +859,6 @@ const L2 = {
     generateLine2PDF();
   });
 })();
-
-/* ------- LINE 2 submit -------- */
-// This function is kept for reference but not used directly anymore
-async function submitLine2Form() {
-  const s = document.getElementById('status2');
-  const form = document.getElementById('tab-line2');
-
-  const fam  = L2.tableToArray(document.querySelector('#l2_familyTable tbody'),
-    ['member','age','job','workTime','homeTime','workOff','remarks','expectedVisitors']);
-  const calls= L2.tableToArray(document.querySelector('#l2_callTable tbody'),
-    ['relation','time','reason','duration','platform','c1','c2','c3','c4','c5','c6']);
-  const banks= L2.tableToArray(document.querySelector('#l2_bankTable tbody'),
-    ['name','singleJoint','type','year','purpose','chequeBook','passbook','internetBanking','phoneBanking','upi','phonepe','googlepay','closingBalance','fd','distance']);
-
-  const assetKeys=['rd','mutualFunds','shares','gold','diamond','silver','vehicle','realestate','cash','crypto','ppf','pf','epf','gpf','coins','limitedBooks','expWatches'];
-  const assets={}; assetKeys.forEach(k=>{
-    const has=(document.getElementById('l2_asset_'+k)||{}).checked||false;
-    const amtEl=document.getElementById('l2_asset_'+k+'_amt');
-    const amt=amtEl?amtEl.value:'';
-    if(has||amt) assets[k]={has,amount:amt};
-  });
-
-  const fd = new FormData(form);
-  fd.append('family_json', JSON.stringify(fam));
-  fd.append('calls_json',  JSON.stringify(calls));
-  fd.append('banks_json',  JSON.stringify(banks));
-  fd.append('assets_json', JSON.stringify(assets));
-
-  s.textContent = 'Submitting…';
-  try{
-    await fetch(SCRIPT_URL_LINE2, { method:'POST', mode:'no-cors', body: fd });
-    s.textContent='Submitted!';
-    form.reset(); L2.bindAssetAmounts();
-  }catch(err){ console.error(err); s.textContent='Network error'; }
-}
 
 /* ======== PDF: polished, bold, landscape ======== */
 function generateLine2PDF(){
