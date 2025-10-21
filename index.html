@@ -1,1039 +1,1430 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Alpha — Client Intake</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Alpha — Client Intake</title>
+    
+    <!-- PDF libs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-<!-- PDF libs -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<style>
-  :root{
-    --midnight: #272757;
-    --blue-accent: #3686AC;
-    --deep-blue: #505081;
-    --teal: #0F0E47;
-    --card: rgba(39, 39, 87, 0.85);
-    --border: rgba(54, 134, 172, 0.4);
-    --text: #e8f0ff;
-    --muted: #a5b4fc;
-    --bg: #0a0a1a;
-    --success: #4CAF50;
-    --error: #f44336;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  html{scroll-behavior:smooth}
-  [id^="sec-"]{scroll-margin-top:90px}
-  body{
-    margin:0;font-family:'Inter', system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
-    background:var(--bg);color:var(--text);overflow-x:hidden
-  }
-  .bg{
-    position:fixed;inset:0;z-index:-3;
-    background: 
-      radial-gradient(circle at 20% 30%, var(--blue-accent) 0%, transparent 40%),
-      radial-gradient(circle at 80% 70%, var(--deep-blue) 0%, transparent 40%),
-      linear-gradient(135deg, var(--teal), var(--midnight) 60%, var(--bg));
-    animation: shift 20s ease-in-out infinite alternate;
-  }
-  @keyframes shift{
-    0% { background-position: 0% 0%, 0% 0%, 0 0; }
-    100% { background-position: 20px -40px, -30px 30px, 0 0; }
-  }
-  
-  /* Cute cartoon elements */
-  .cartoon {
-    position: fixed;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0.7;
-    transition: transform 0.5s ease;
-  }
-  .cartoon.star { animation: float 8s ease-in-out infinite; }
-  .cartoon.cloud { animation: float 12s ease-in-out infinite; }
-  .cartoon.planet { animation: rotate 30s linear infinite; }
-  
-  @keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(5deg); }
-  }
-  
-  @keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  .container{max-width:1400px;margin:24px auto;padding:16px}
-  .brand{display:flex;align-items:center;gap:14px;margin-bottom:10px}
-  .alpha-logo{
-    height:72px;width:72px;object-fit:contain;
-    filter: drop-shadow(0 0 10px var(--blue-accent));
-  }
-  h1{
-    margin:0;font-size:24px;
-    background: linear-gradient(135deg, var(--text), var(--blue-accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 15px rgba(54, 134, 172, 0.4);
-  }
-
-  .tabs{display:flex;gap:8px;margin:10px 0 14px}
-  .tab{
-    cursor:pointer;padding:10px 14px;border-radius:999px;
-    border:1px solid var(--border);background:rgba(54, 134, 172, 0.15);
-    font-weight:700;color: var(--text);transition: all 0.3s ease;
-  }
-  .tab:hover{background:rgba(54, 134, 172, 0.25);}
-  .tab.active{
-    background:linear-gradient(135deg, var(--deep-blue), var(--blue-accent));
-    border-color:transparent;box-shadow: 0 0 15px rgba(54, 134, 172, 0.5);
-  }
-
-  .card{
-    background:var(--card);border:1px solid var(--border);
-    border-radius:18px;padding:16px;backdrop-filter:blur(12px);
-    margin-bottom:16px;box-shadow: 0 8px 32px rgba(0, 5, 20, 0.3);
-  }
-  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
-  .col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
-
-  label{
-    display:block;font-size:12px;color:var(--muted);margin:6px 0 4px;
-    text-shadow: 0 0 5px rgba(54, 134, 172, 0.3);
-  }
-  input,select,textarea{
-    width:100%;border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;
-    background:rgba(15, 14, 71, 0.4);color:var(--text);outline:none;
-    transition: all 0.3s ease;
-  }
-  input:focus, select:focus, textarea:focus {
-    border-color: var(--blue-accent);
-    box-shadow: 0 0 10px rgba(54, 134, 172, 0.5);
-  }
-  select, option{background:rgba(15, 14, 71, 0.8);color:#e8f0ff}
-  textarea{min-height:90px;resize:vertical}
-  .btn{
-    border:1px solid rgba(255,255,255,.18);
-    background:linear-gradient(135deg, var(--deep-blue), var(--blue-accent));
-    color:#fff;border-radius:999px;padding:10px 14px;font-weight:700;
-    cursor:pointer;transition: all 0.3s ease;
-  }
-  .btn:hover{
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(54, 134, 172, 0.4);
-  }
-  .btn.ghost{
-    background:transparent;color:var(--text);border-color: var(--border);
-  }
-  .btn.ghost:hover{
-    background:rgba(54, 134, 172, 0.15);
-  }
-  .note{font-size:12px;color:#c7d2fe;margin-left:8px}
-  .hide{display:none}
-  
-  /* Status messages */
-  .status {
-    padding: 8px 12px;
-    border-radius: 8px;
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: 500;
-  }
-  .status.success {
-    background-color: rgba(76, 175, 80, 0.2);
-    color: var(--success);
-    border: 1px solid rgba(76, 175, 80, 0.4);
-  }
-  .status.error {
-    background-color: rgba(244, 67, 54, 0.2);
-    color: var(--error);
-    border: 1px solid rgba(244, 67, 54, 0.4);
-  }
-
-  /* Line 2 top nav */
-  .l2-nav{
-    position:sticky;top:10px;z-index:2;display:flex;flex-wrap:wrap;
-    gap:8px;margin-bottom:8px;align-items:center;
-  }
-  .l2-nav a{
-    padding:8px 12px;border:1px solid var(--border);border-radius:999px;
-    background:rgba(54, 134, 172, 0.15);text-decoration:none;
-    color:var(--text);font-weight:600;font-size:13px;
-    transition: all 0.3s ease;
-  }
-  .l2-nav a:hover{
-    background:rgba(54, 134, 172, 0.25);
-    transform: translateY(-2px);
-  }
-  .l2-right{margin-left:auto;display:flex;gap:8px}
-
-  /* tables */
-  .table-wrapper{overflow-x:auto; border-radius: 12px;}
-  .table{
-    width:100%;border-collapse:separate;border-spacing:0;min-width:1600px;
-    background: rgba(15, 14, 71, 0.3); border-radius: 12px; overflow: hidden;
-  }
-  .table th,.table td{
-    border:1px solid var(--border);padding:10px;font-size:13px;
-    vertical-align:middle; background: rgba(15, 14, 71, 0.2);
-  }
-  .table th{
-    white-space:nowrap; background: rgba(39, 39, 87, 0.6);
-    color: var(--text); font-weight: 600;
-  }
-  .table td input{
-    padding:10px 12px;border-radius:10px;background:rgba(15, 14, 71, 0.4);
-    border:1px solid var(--border);color:var(--text);width:100%;display:block;
-  }
-  /* bank column sizes for visibility - UPDATED */
-  #l2_bankTable th:nth-child(1), #l2_bankTable td:nth-child(1){min-width:180px;} /* Bank Name */
-  #l2_bankTable th:nth-child(4), #l2_bankTable td:nth-child(4){min-width:110px;} /* Year */
-  #l2_bankTable th:nth-child(10),#l2_bankTable td:nth-child(10){min-width:140px;} /* UPI - Reduced */
-  #l2_bankTable th:nth-child(13),#l2_bankTable td:nth-child(13){min-width:180px;} /* CB - Increased */
-  #l2_bankTable th:nth-child(14),#l2_bankTable td:nth-child(14){min-width:180px;} /* FD - Increased */
-  #l2_bankTable th:nth-child(15),#l2_bankTable td:nth-child(15){min-width:120px;} /* Distance - Reduced */
-
-  /* assets tidy layout incl EPF/GPF */
-  .asset-group{display:flex;flex-direction:column;gap:12px}
-  .asset-field{display:flex;flex-direction:column;gap:6px}
-  .asset-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  
-  /* Checkbox styling */
-  input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    margin-right: 8px;
-    accent-color: var(--blue-accent);
-  }
-  
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: rgba(15, 14, 71, 0.2);
-    border-radius: 10px;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--blue-accent);
-    border-radius: 10px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--deep-blue);
-  }
-</style>
+    <style>
+        :root {
+            --primary: #FF6B8B;
+            --secondary: #6A5ACD;
+            --accent: #FFD166;
+            --light: #FFE8EC;
+            --dark: #4A306D;
+            --text: #333333;
+            --muted: #888888;
+            --success: #4CAF50;
+            --error: #f44336;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --border: rgba(255, 107, 139, 0.3);
+        }
+        
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        html { scroll-behavior: smooth; }
+        [id^="sec-"] { scroll-margin-top: 90px; }
+        
+        body {
+            margin: 0;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: var(--light);
+            color: var(--text);
+            overflow-x: hidden;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ff6b8b' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: -3;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255, 107, 139, 0.3) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(106, 90, 205, 0.3) 0%, transparent 40%),
+                linear-gradient(135deg, rgba(255, 209, 102, 0.2), rgba(255, 107, 139, 0.2) 60%, rgba(255, 232, 236, 0.2));
+            animation: shift 20s ease-in-out infinite alternate;
+        }
+        
+        @keyframes shift {
+            0% { background-position: 0% 0%, 0% 0%, 0 0; }
+            100% { background-position: 20px -40px, -30px 30px, 0 0; }
+        }
+        
+        /* Cute cartoon elements */
+        .cartoon {
+            position: fixed;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.7;
+            transition: transform 0.5s ease;
+            font-size: 40px;
+        }
+        
+        .cartoon.star { animation: float 8s ease-in-out infinite; }
+        .cartoon.cloud { animation: float 12s ease-in-out infinite; }
+        .cartoon.planet { animation: rotate 30s linear infinite; }
+        .cartoon.character { animation: bounce 5s ease-in-out infinite; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.05); }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 24px auto;
+            padding: 16px;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .alpha-logo {
+            height: 72px;
+            width: 72px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px var(--primary));
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(255, 107, 139, 0.4);
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0 14px;
+        }
+        
+        .tab {
+            cursor: pointer;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 2px solid var(--border);
+            background: rgba(255, 107, 139, 0.15);
+            font-weight: 700;
+            color: var(--text);
+            transition: all 0.3s ease;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 107, 139, 0.25);
+            transform: translateY(-3px);
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: transparent;
+            box-shadow: 0 0 15px rgba(255, 107, 139, 0.5);
+            color: white;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 16px;
+            backdrop-filter: blur(12px);
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0, 5, 20, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 10px;
+        }
+        
+        .col-3 { grid-column: span 3; }
+        .col-4 { grid-column: span 4; }
+        .col-6 { grid-column: span 6; }
+        .col-8 { grid-column: span 8; }
+        .col-12 { grid-column: span 12; }
+        
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin: 6px 0 4px;
+            text-shadow: 0 0 5px rgba(255, 107, 139, 0.3);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--text);
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(255, 107, 139, 0.5);
+            transform: scale(1.02);
+        }
+        
+        select, option {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text);
+        }
+        
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+        
+        .btn {
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(255, 107, 139, 0.4);
+        }
+        
+        .btn.ghost {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--border);
+        }
+        
+        .btn.ghost:hover {
+            background: rgba(255, 107, 139, 0.15);
+        }
+        
+        .note {
+            font-size: 12px;
+            color: var(--muted);
+            margin-left: 8px;
+        }
+        
+        .hide { display: none; }
+        
+        /* Status messages */
+        .status {
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status.success {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+            border: 1px solid rgba(76, 175, 80, 0.4);
+        }
+        
+        .status.error {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: var(--error);
+            border: 1px solid rgba(244, 67, 54, 0.4);
+        }
+        
+        /* Line 2 top nav */
+        .l2-nav {
+            position: sticky;
+            top: 10px;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        
+        .l2-nav a {
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 107, 139, 0.15);
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+        }
+        
+        .l2-nav a:hover {
+            background: rgba(255, 107, 139, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .l2-right {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* tables */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1600px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .table th, .table td {
+            border: 2px solid var(--border);
+            padding: 10px;
+            font-size: 13px;
+            vertical-align: middle;
+            background: rgba(255, 255, 255, 0.7);
+        }
+        
+        .table th {
+            white-space: nowrap;
+            background: rgba(255, 107, 139, 0.2);
+            color: var(--text);
+            font-weight: 600;
+        }
+        
+        .table td input {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--border);
+            color: var(--text);
+            width: 100%;
+            display: block;
+        }
+        
+        /* bank column sizes for visibility - UPDATED */
+        #l2_bankTable th:nth-child(1), #l2_bankTable td:nth-child(1) { min-width: 180px; } /* Bank Name */
+        #l2_bankTable th:nth-child(4), #l2_bankTable td:nth-child(4) { min-width: 110px; } /* Year */
+        #l2_bankTable th:nth-child(10), #l2_bankTable td:nth-child(10) { min-width: 140px; } /* UPI - Reduced */
+        #l2_bankTable th:nth-child(13), #l2_bankTable td:nth-child(13) { min-width: 180px; } /* CB - Increased */
+        #l2_bankTable th:nth-child(14), #l2_bankTable td:nth-child(14) { min-width: 180px; } /* FD - Increased */
+        #l2_bankTable th:nth-child(15), #l2_bankTable td:nth-child(15) { min-width: 120px; } /* Distance - Reduced */
+        
+        /* assets tidy layout incl EPF/GPF */
+        .asset-group { display: flex; flex-direction: column; gap: 12px; }
+        .asset-field { display: flex; flex-direction: column; gap: 6px; }
+        .asset-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        
+        /* Checkbox styling */
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            accent-color: var(--primary);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 107, 139, 0.1);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary);
+        }
+        
+        /* Fun character speech bubbles */
+        .speech-bubble {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid var(--primary);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 20px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: white transparent;
+            display: block;
+            width: 0;
+        }
+        
+        .speech-bubble:before {
+            content: '';
+            position: absolute;
+            bottom: -13px;
+            left: 18px;
+            border-width: 12px 12px 0;
+            border-style: solid;
+            border-color: var(--primary) transparent;
+            display: block;
+            width: 0;
+        }
+    </style>
 </head>
 <body>
-<div class="bg"></div>
+    <div class="bg"></div>
 
-<!-- Cute cartoon elements -->
-<div class="cartoon star" style="top: 15%; left: 5%; font-size: 30px;">⭐</div>
-<div class="cartoon star" style="top: 25%; right: 7%; font-size: 24px;">✨</div>
-<div class="cartoon cloud" style="top: 12%; right: 15%; font-size: 40px;">☁️</div>
-<div class="cartoon cloud" style="bottom: 20%; left: 10%; font-size: 35px;">☁️</div>
-<div class="cartoon planet" style="bottom: 15%; right: 8%; font-size: 45px;">🪐</div>
-<div class="cartoon star" style="bottom: 30%; left: 20%; font-size: 28px;">🌟</div>
+    <!-- Cute cartoon elements - now with characters! -->
+    <div class="cartoon character" style="top: 15%; left: 5%;">🐱</div>
+    <div class="cartoon character" style="top: 25%; right: 7%;">🐶</div>
+    <div class="cartoon cloud" style="top: 12%; right: 15%;">☁️</div>
+    <div class="cartoon cloud" style="bottom: 20%; left: 10%;">☁️</div>
+    <div class="cartoon character" style="bottom: 15%; right: 8%;">🦊</div>
+    <div class="cartoon character" style="bottom: 30%; left: 20%;">🐰</div>
+    <div class="cartoon character" style="top: 60%; left: 15%;">🐼</div>
+    <div class="cartoon character" style="top: 40%; right: 20%;">🐨</div>
 
-<div class="container">
-  <div class="brand">
-    <img class="alpha-logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIHZpZXdCb3g9IjAgMCA3MiA3MiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzYiIGN5PSIzNiIgcj0iMzYiIGZpbGw9IiMyNzI3NTciLz4KPHBhdGggZD0iTTM2IDE4TDU0IDU0SDE4TDM2IDE4WiIgZmlsbD0iIzM2ODZBQyIvPgo8Y2lyY2xlIGN4PSIzNiIgY3k9IjQ1IiByPSI4IiBmaWxsPSIjNTA1MDgxIi8+Cjwvc3ZnPgo=" alt="Alpha" />
-    <h1>Alpha — Client Intake</h1>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" data-target="#tab-line1">Line 1</button>
-    <button class="tab" data-target="#tab-line2">Line 2</button>
-  </div>
-
-  <!-- ============ LINE 1 (X1–X51 odd only) ============ -->
-  <form id="tab-line1" class="card">
-    <div class="grid">
-      <div class="col-4">
-        <label>🗂️ Line 1 Player ID *</label>
-        <select name="line1Id" id="l1_slot" required>
-          <option value="">Select</option>
-        </select>
-      </div>
-      <div class="col-8">
-        <label>PLAYER NAME *</label>
-        <input name="playerName" required />
-      </div>
-      <div class="col-12"><label>🧑‍💼 Customer</label><input name="customer"/></div>
-      <div class="col-6"><label>📞 Number</label><input name="number" type="tel"/></div>
-      <div class="col-6"><label>🗣️ Language</label>
-        <select name="language"><option value=""></option><option>Hindi</option><option>English</option><option>Gujarati</option><option>Bengali</option><option>Marathi</option><option>Punjabi</option><option>Telugu</option><option>Tamil</option><option>Kannada</option><option>Other</option></select>
-      </div>
-      <div class="col-3"><label>🎂 Age</label><input name="age"/></div>
-      <div class="col-3"><label>🚻 Gender</label><select name="gender"><option value=""></option><option>male</option><option>female</option><option>other</option></select></div>
-      <div class="col-6"><label>📍 Location</label><input name="location"/></div>
-      <div class="col-6"><label>🏭 Profession</label>
-        <select name="profession">
-          <option value=""></option>
-          <option>Businessman</option><option>Engineer</option><option>Shopkeeper</option><option>Doctor</option>
-          <option>Teacher</option><option>Lawyer</option><option>Government Employee</option><option>Private Employee</option>
-          <option>IT Professional</option><option>Driver</option><option>Farmer</option><option>Plumber</option>
-          <option>Electrician</option><option>Carpenter</option><option>Security Guard</option><option>Housewife / Homemaker</option>
-          <option>Student</option><option>Freelancer</option><option>Retired</option><option>Unemployed / Looking</option>
-        </select>
-      </div>
-      <div class="col-12"><label>📝 Remarks</label><textarea name="remarks"></textarea></div>
-    </div>
-    <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:8px">
-      <span class="note">Submitting to <b>line 1 data</b></span>
-      <button class="btn" type="submit">Submit</button>
-    </div>
-    <div id="status1"></div>
-  </form>
-
-  <!-- ============ LINE 2 (sectioned) ============ -->
-  <form id="tab-line2" class="card hide">
-    <!-- sticky quick nav -->
-    <div class="l2-nav">
-      <a href="#sec-personal">Personal</a>
-      <a href="#sec-family">Family</a>
-      <a href="#sec-calls">Calls</a>
-      <a href="#sec-bank">Bank</a>
-      <a href="#sec-assets">Assets</a>
-      <div class="l2-right">
-        <button class="btn ghost" type="button" id="l2_downloadPdf">Download PDF</button>
-        <button class="btn ghost" type="button" id="l2_saveDraft">Save Draft</button>
-        <button class="btn ghost" type="button" id="l2_loadDraft">Load Draft</button>
-      </div>
-    </div>
-
-    <!-- Personal -->
-    <div id="sec-personal" class="card">
-      <h3 style="margin:4px 0 12px 0">Personal Details</h3>
-      <div class="grid">
-        <div class="col-6"><label>Client Name *</label><input name="clientName" required/></div>
-        <div class="col-3"><label>Date</label><input type="date" name="date"/></div>
-        <div class="col-3"><label>Time</label><input type="time" name="time"/></div>
-
-        <div class="col-3"><label>Language</label>
-          <select name="language"><option value="">Select</option><option>English</option><option>Hindi</option><option>Gujarati</option><option>Other</option></select>
-        </div>
-        <div class="col-4"><label>Line 1</label>
-          <select id="l2_line1" name="line1"><option value="">Select</option></select>
-        </div>
-        <div class="col-4"><label>Line 2</label>
-          <select id="l2_line2" name="line2"><option value="">Select</option></select>
-        </div>
-        <div class="col-4"><label>Line 3</label>
-          <select name="line3"><option value="">Select</option><option>C1</option><option>C2</option></select>
+    <div class="container">
+        <div class="brand">
+            <img class="alpha-logo" src="C:/Users/zulek/Desktop/Alogo" alt="Alpha" >
+            <h1>Alpha — Client Intake</h1>
         </div>
 
-        <div class="col-3"><label>Charging (%)</label><input type="number" min="0" max="100" name="charging"/></div>
-        <div class="col-3"><label>Plugin</label><input name="plugin"/></div>
-        <div class="col-6"><label>Current Location</label>
-          <select name="currentLocation"><option value="">Select</option><option>Home</option><option>Office</option><option>Work</option><option>Friend</option><option>Other</option></select>
+        <div class="speech-bubble">
+            Welcome to Alpha Client Intake! Let's gather all the information we need in a fun and organized way! 🎉
         </div>
 
-        <div class="col-3"><label>Third Party (Y/N)</label><select name="thirdParty"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Client DOB</label><input type="date" name="dob"/></div>
-        <div class="col-3"><label>Client Age</label><input type="number" min="0" name="age"/></div>
-        <div class="col-3"><label>Aadhaar Number</label><input name="aadhaar"/></div>
-
-        <div class="col-3"><label>Gender</label><select name="gender"><option value=""></option><option>Male</option><option>Female</option><option>Other</option></select></div>
-        <div class="col-3"><label>Marriage (Y/N)</label><select name="marriage"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Kids (0–5)</label><select name="kids"><option value=""></option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select></div>
-        <div class="col-3"><label>Date of Marriage</label><input type="date" name="dom"/></div>
-
-        <div class="col-3"><label>Number (Y/N)</label><select name="numberActive"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>WhatsApp (Y/N)</label><select name="whatsapp"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Phone Number</label><input name="phone1"/></div>
-        <div class="col-3"><label>2nd Number</label><input name="phone2"/></div>
-
-        <div class="col-3"><label>Emergency No</label><input name="emergencyNo"/></div>
-        <div class="col-6"><label>E-mail</label><input type="email" name="email"/></div>
-        <div class="col-3"><label>Education</label>
-          <select name="education"><option value=""></option><option>Uneducated</option><option>Higher Edu</option><option>Bachelor</option><option>Master</option><option>Doctor/PHD</option></select>
+        <div class="tabs">
+            <button class="tab active" data-target="#tab-line1">Line 1 🗂️</button>
+            <button class="tab" data-target="#tab-line2">Line 2 📋</button>
         </div>
 
-        <div class="col-3"><label>Work (Y/N)</label><select name="workYN"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Position</label><input name="position"/></div>
-        <div class="col-3"><label>Employment</label><select name="employment"><option value=""></option><option>Employed</option><option>Self-Employed</option><option>Student</option><option>Retired</option></select></div>
-        <div class="col-3"><label>Working Since</label><input type="number" min="1900" max="2100" name="workSince"/></div>
-
-        <div class="col-6"><label>Company Name</label><input name="companyName"/></div>
-        <div class="col-12"><label>Current Address</label><input name="currentAddress"/></div>
-
-        <div class="col-3"><label>Phone Model</label><input name="phoneModel"/></div>
-        <div class="col-3"><label>Other Phone (Y/N)</label><select name="otherPhoneYN"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Laptop (Y/N)</label><select name="laptopYN"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>2-wheeler (Y/N)</label><select name="twoWheelerYN"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>4-wheeler (Y/N)</label><select name="fourWheelerYN"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Total vehicles</label><input type="number" min="0" name="totalVehicle"/></div>
-        <div class="col-3"><label>Height (cm)</label><input type="number" min="0" name="height"/></div>
-        <div class="col-3"><label>Weight (kg)</label><input type="number" min="0" name="weight"/></div>
-        <div class="col-6"><label>Color Tone</label><select name="colorTone"><option value=""></option><option>Fair</option><option>Wheatish</option><option>Dusky</option><option>Dark</option></select></div>
-
-        <div class="col-3"><label>Passport (Y/N)</label><select name="passportYN"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Voter ID (Y/N)</label><select name="voterIdYN"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Place of Birth</label><input name="pob"/></div>
-        <div class="col-3"><label>Nationality</label><input name="nationality"/></div>
-        <div class="col-3"><label>Visa Rejected (Y/N)</label><select name="visaRejected"><option value=""></option><option>Y</option><option>N</option></select></div>
-        <div class="col-3"><label>Overstay (Y/N)</label><select name="overstayYN"><option value=""></option><option>Y</option><option>N</option></select></div>
-      </div>
-    </div>
-
-    <!-- Family -->
-    <div id="sec-family" class="card">
-      <h3 style="margin:4px 0 12px 0">Family Members</h3>
-      <div class="table-wrapper">
-        <table class="table" style="min-width:1200px" id="l2_familyTable">
-          <thead><tr>
-            <th>Member</th><th>Age</th><th>Job</th><th>Work/School Time</th>
-            <th>Home Time</th><th>Work Off</th><th>Remarks</th><th>Expected Visitors</th><th></th>
-          </tr></thead><tbody></tbody>
-        </table>
-      </div>
-      <div style="margin-top:8px"><button type="button" class="btn" onclick="L2.addFamilyRow()">+ Add Member</button></div>
-    </div>
-
-    <!-- Calls -->
-    <div id="sec-calls" class="card">
-      <h3 style="margin:4px 0 12px 0">Daily Call Log</h3>
-      <div class="table-wrapper">
-        <table class="table" style="min-width:1200px" id="l2_callTable">
-          <thead><tr>
-            <th>Relation</th><th>Time</th><th>Reason</th><th>Duration</th><th>Platform</th>
-            <th>1st</th><th>2nd</th><th>3rd</th><th>4th</th><th>5th</th><th>6th</th><th></th>
-          </tr></thead><tbody></tbody>
-        </table>
-      </div>
-      <div style="margin-top:8px"><button type="button" class="btn" onclick="L2.addCallRow()">+ Add Call</button></div>
-    </div>
-
-    <!-- Bank -->
-    <div id="sec-bank" class="card">
-      <h3 style="margin:4px 0 12px 0">Bank Details</h3>
-      <div class="table-wrapper">
-        <table class="table" id="l2_bankTable">
-          <colgroup>
-            <col style="width:auto"><col style="width:120px"><col style="width:140px"><col style="width:110px">
-            <col style="width:auto"><col style="width:120px"><col style="width:120px"><col style="width:150px">
-            <col style="width:150px"><col style="width:140px"><col style="width:120px"><col style="width:120px">
-            <col style="width:180px"><col style="width:180px"><col style="width:120px"><col style="width:90px">
-          </colgroup>
-          <thead><tr>
-            <th title="Full bank name">Bank</th>
-            <th title="Single or Joint account">S/J</th>
-            <th title="Saving or Current">Type</th>
-            <th title="Account opening year">Year</th>
-            <th>Purpose</th>
-            <th>Cheque</th>
-            <th>Passbook</th>
-            <th>Internet</th>
-            <th>Phone</th>
-            <th title="UPI ID">UPI</th>
-            <th>PhonePe</th>
-            <th>GPay</th>
-            <th title="Closing Balance">CB</th>
-            <th title="Fixed Deposit">FD</th>
-            <th title="Distance to Bank (km)">Distance (km)</th>
-            <th></th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div style="margin-top:8px"><button type="button" class="btn" onclick="L2.addBankRow()">+ Add Bank</button></div>
-    </div>
-
-    <!-- Assets -->
-    <div id="sec-assets" class="card">
-      <h3 style="margin:4px 0 12px 0">Assets (Ask in detail)</h3>
-      <div class="grid">
-        <div class="col-3 asset-group">
-          <div class="asset-field">
-            <label><input id="l2_asset_rd" type="checkbox"> RD</label>
-            <input class="asset-amt" id="l2_asset_rd_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_mutualFunds" type="checkbox"> Mutual Funds</label>
-            <input class="asset-amt" id="l2_asset_mutualFunds_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_shares" type="checkbox"> Shares</label>
-            <input class="asset-amt" id="l2_asset_shares_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_gold" type="checkbox"> Gold</label>
-            <input class="asset-amt" id="l2_asset_gold_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_diamond" type="checkbox"> Diamond</label>
-            <input class="asset-amt" id="l2_asset_diamond_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-        </div>
-
-        <div class="col-3 asset-group">
-          <div class="asset-field">
-            <label><input id="l2_asset_silver" type="checkbox"> Silver</label>
-            <input class="asset-amt" id="l2_asset_silver_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_vehicle" type="checkbox"> Vehicle</label>
-            <input class="asset-amt" id="l2_asset_vehicle_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_realestate" type="checkbox"> Real estate</label>
-            <input class="asset-amt" id="l2_asset_realestate_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_cash" type="checkbox"> Cash</label>
-            <input class="asset-amt" id="l2_asset_cash_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_crypto" type="checkbox"> Crypto</label>
-            <input class="asset-amt" id="l2_asset_crypto_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-        </div>
-
-        <div class="col-3 asset-group">
-          <div class="asset-field">
-            <label><input id="l2_asset_ppf" type="checkbox"> PPF</label>
-            <input class="asset-amt" id="l2_asset_ppf_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_pf" type="checkbox"> PF</label>
-            <input class="asset-amt" id="l2_asset_pf_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-two">
-            <div class="asset-field">
-              <label><input id="l2_asset_epf" type="checkbox"> EPF</label>
-              <input class="asset-amt" id="l2_asset_epf_amt" type="number" min="0" step="0.01" placeholder="Amount">
+        <!-- ============ LINE 1 (X1–X51 odd only) ============ -->
+        <form id="tab-line1" class="card">
+            <div class="grid">
+                <div class="col-4">
+                    <label>🗂️ Line 1 Player ID *</label>
+                    <select name="line1Id" id="l1_slot" required>
+                        <option value="">Select</option>
+                    </select>
+                </div>
+                <div class="col-8">
+                    <label>PLAYER NAME *</label>
+                    <input name="playerName" required />
+                </div>
+                <div class="col-12"><label>🧑‍💼 Customer</label><input name="customer"/></div>
+                <div class="col-6"><label>📞 Number</label><input name="number" type="tel"/></div>
+                <div class="col-6"><label>🗣️ Language</label>
+                    <select name="language">
+                        <option value=""></option>
+                        <option>Hindi</option><option>English</option><option>Gujarati</option><option>Bengali</option>
+                        <option>Marathi</option><option>Punjabi</option><option>Telugu</option><option>Tamil</option>
+                        <option>Kannada</option><option>Other</option>
+                    </select>
+                </div>
+                <div class="col-3"><label>🎂 Age</label><input name="age"/></div>
+                <div class="col-3"><label>🚻 Gender</label>
+                    <select name="gender">
+                        <option value=""></option>
+                        <option>male</option><option>female</option><option>other</option>
+                    </select>
+                </div>
+                <div class="col-6"><label>📍 Location</label><input name="location"/></div>
+                <div class="col-6"><label>🏭 Profession</label>
+                    <select name="profession">
+                        <option value=""></option>
+                        <option>Businessman</option><option>Engineer</option><option>Shopkeeper</option><option>Doctor</option>
+                        <option>Teacher</option><option>Lawyer</option><option>Government Employee</option><option>Private Employee</option>
+                        <option>IT Professional</option><option>Driver</option><option>Farmer</option><option>Plumber</option>
+                        <option>Electrician</option><option>Carpenter</option><option>Security Guard</option><option>Housewife / Homemaker</option>
+                        <option>Student</option><option>Freelancer</option><option>Retired</option><option>Unemployed / Looking</option>
+                    </select>
+                </div>
+                <div class="col-12"><label>📝 Remarks</label><textarea name="remarks"></textarea></div>
             </div>
-            <div class="asset-field">
-              <label><input id="l2_asset_gpf" type="checkbox"> GPF</label>
-              <input class="asset-amt" id="l2_asset_gpf_amt" type="number" min="0" step="0.01" placeholder="Amount">
+            <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:8px">
+                <span class="note">Submitting to <b>line 1 data</b></span>
+                <button class="btn" type="submit">Submit 🚀</button>
             </div>
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_coins" type="checkbox"> Coins</label>
-            <input class="asset-amt" id="l2_asset_coins_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_limitedBooks" type="checkbox"> Limited Books</label>
-            <input class="asset-amt" id="l2_asset_limitedBooks_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-          <div class="asset-field">
-            <label><input id="l2_asset_expWatches" type="checkbox"> Exp. Watches</label>
-            <input class="asset-amt" id="l2_asset_expWatches_amt" type="number" min="0" step="0.01" placeholder="Amount">
-          </div>
-        </div>
+            <div id="status1"></div>
+        </form>
 
-        <div class="col-12">
-          <label>Asset Notes</label>
-          <textarea id="l2_assetNotes" placeholder="Details about assets..."></textarea>
-        </div>
-      </div>
+        <!-- ============ LINE 2 (sectioned) ============ -->
+        <form id="tab-line2" class="card hide">
+            <!-- sticky quick nav -->
+            <div class="l2-nav">
+                <a href="#sec-personal">Personal 👤</a>
+                <a href="#sec-family">Family 👨‍👩‍👧‍👦</a>
+                <a href="#sec-calls">Calls 📞</a>
+                <a href="#sec-bank">Bank 🏦</a>
+                <a href="#sec-assets">Assets 💰</a>
+                <div class="l2-right">
+                    <button class="btn ghost" type="button" id="l2_downloadPdf">Download PDF 📄</button>
+                    <button class="btn ghost" type="button" id="l2_saveDraft">Save Draft 💾</button>
+                    <button class="btn ghost" type="button" id="l2_loadDraft">Load Draft 📂</button>
+                </div>
+            </div>
+
+            <!-- Personal -->
+            <div id="sec-personal" class="card">
+                <h3 style="margin:4px 0 12px 0">Personal Details 👤</h3>
+                <div class="grid">
+                    <div class="col-6"><label>Client Name *</label><input name="clientName" required/></div>
+                    <div class="col-3"><label>Date</label><input type="date" name="date"/></div>
+                    <div class="col-3"><label>Time</label><input type="time" name="time"/></div>
+
+                    <div class="col-3"><label>Language</label>
+                        <select name="language">
+                            <option value="">Select</option>
+                            <option>English</option><option>Hindi</option><option>Gujarati</option><option>Other</option>
+                        </select>
+                    </div>
+                    <div class="col-4"><label>Line 1</label>
+                        <select id="l2_line1" name="line1"><option value="">Select</option></select>
+                    </div>
+                    <div class="col-4"><label>Line 2</label>
+                        <select id="l2_line2" name="line2"><option value="">Select</option></select>
+                    </div>
+                    <div class="col-4"><label>Line 3</label>
+                        <select name="line3">
+                            <option value="">Select</option>
+                            <option>C1</option><option>C2</option>
+                        </select>
+                    </div>
+
+                    <div class="col-3"><label>Charging (%)</label><input type="number" min="0" max="100" name="charging"/></div>
+                    <div class="col-3"><label>Plugin</label><input name="plugin"/></div>
+                    <div class="col-6"><label>Current Location</label>
+                        <select name="currentLocation">
+                            <option value="">Select</option>
+                            <option>Home</option><option>Office</option><option>Work</option><option>Friend</option><option>Other</option>
+                        </select>
+                    </div>
+
+                    <div class="col-3"><label>Third Party (Y/N)</label>
+                        <select name="thirdParty">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Client DOB</label><input type="date" name="dob"/></div>
+                    <div class="col-3"><label>Client Age</label><input type="number" min="0" name="age"/></div>
+                    <div class="col-3"><label>Aadhaar Number</label><input name="aadhaar"/></div>
+
+                    <div class="col-3"><label>Gender</label>
+                        <select name="gender">
+                            <option value=""></option>
+                            <option>Male</option><option>Female</option><option>Other</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Marriage (Y/N)</label>
+                        <select name="marriage">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Kids (0–5)</label>
+                        <select name="kids">
+                            <option value=""></option>
+                            <option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Date of Marriage</label><input type="date" name="dom"/></div>
+
+                    <div class="col-3"><label>Number (Y/N)</label>
+                        <select name="numberActive">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>WhatsApp (Y/N)</label>
+                        <select name="whatsapp">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Phone Number</label><input name="phone1"/></div>
+                    <div class="col-3"><label>2nd Number</label><input name="phone2"/></div>
+
+                    <div class="col-3"><label>Emergency No</label><input name="emergencyNo"/></div>
+                    <div class="col-6"><label>E-mail</label><input type="email" name="email"/></div>
+                    <div class="col-3"><label>Education</label>
+                        <select name="education">
+                            <option value=""></option>
+                            <option>Uneducated</option><option>Higher Edu</option><option>Bachelor</option><option>Master</option><option>Doctor/PHD</option>
+                        </select>
+                    </div>
+
+                    <div class="col-3"><label>Work (Y/N)</label>
+                        <select name="workYN">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Position</label><input name="position"/></div>
+                    <div class="col-3"><label>Employment</label>
+                        <select name="employment">
+                            <option value=""></option>
+                            <option>Employed</option><option>Self-Employed</option><option>Student</option><option>Retired</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Working Since</label><input type="number" min="1900" max="2100" name="workSince"/></div>
+
+                    <div class="col-6"><label>Company Name</label><input name="companyName"/></div>
+                    <div class="col-12"><label>Current Address</label><input name="currentAddress"/></div>
+
+                    <div class="col-3"><label>Phone Model</label><input name="phoneModel"/></div>
+                    <div class="col-3"><label>Other Phone (Y/N)</label>
+                        <select name="otherPhoneYN">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Laptop (Y/N)</label>
+                        <select name="laptopYN">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>2-wheeler (Y/N)</label>
+                        <select name="twoWheelerYN">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>4-wheeler (Y/N)</label>
+                        <select name="fourWheelerYN">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Total vehicles</label><input type="number" min="0" name="totalVehicle"/></div>
+                    <div class="col-3"><label>Height (cm)</label><input type="number" min="0" name="height"/></div>
+                    <div class="col-3"><label>Weight (kg)</label><input type="number" min="0" name="weight"/></div>
+                    <div class="col-6"><label>Color Tone</label>
+                        <select name="colorTone">
+                            <option value=""></option>
+                            <option>Fair</option><option>Wheatish</option><option>Dusky</option><option>Dark</option>
+                        </select>
+                    </div>
+
+                    <div class="col-3"><label>Passport (Y/N)</label>
+                        <select name="passportYN">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Voter ID (Y/N)</label>
+                        <select name="voterIdYN">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Place of Birth</label><input name="pob"/></div>
+                    <div class="col-3"><label>Nationality</label><input name="nationality"/></div>
+                    <div class="col-3"><label>Visa Rejected (Y/N)</label>
+                        <select name="visaRejected">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                    <div class="col-3"><label>Overstay (Y/N)</label>
+                        <select name="overstayYN">
+                            <option value=""></option>
+                            <option>Y</option><option>N</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Family -->
+            <div id="sec-family" class="card">
+                <h3 style="margin:4px 0 12px 0">Family Members 👨‍👩‍👧‍👦</h3>
+                <div class="table-wrapper">
+                    <table class="table" style="min-width:1200px" id="l2_familyTable">
+                        <thead>
+                            <tr>
+                                <th>Member</th><th>Age</th><th>Job</th><th>Work/School Time</th>
+                                <th>Home Time</th><th>Work Off</th><th>Remarks</th><th>Expected Visitors</th><th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:8px"><button type="button" class="btn" onclick="L2.addFamilyRow()">+ Add Member 👤</button></div>
+            </div>
+
+            <!-- Calls -->
+            <div id="sec-calls" class="card">
+                <h3 style="margin:4px 0 12px 0">Daily Call Log 📞</h3>
+                <div class="table-wrapper">
+                    <table class="table" style="min-width:1200px" id="l2_callTable">
+                        <thead>
+                            <tr>
+                                <th>Relation</th><th>Time</th><th>Reason</th><th>Duration</th><th>Platform</th>
+                                <th>1st</th><th>2nd</th><th>3rd</th><th>4th</th><th>5th</th><th>6th</th><th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:8px"><button type="button" class="btn" onclick="L2.addCallRow()">+ Add Call 📱</button></div>
+            </div>
+
+            <!-- Bank -->
+            <div id="sec-bank" class="card">
+                <h3 style="margin:4px 0 12px 0">Bank Details 🏦</h3>
+                <div class="table-wrapper">
+                    <table class="table" id="l2_bankTable">
+                        <colgroup>
+                            <col style="width:auto"><col style="width:120px"><col style="width:140px"><col style="width:110px">
+                            <col style="width:auto"><col style="width:120px"><col style="width:120px"><col style="width:150px">
+                            <col style="width:150px"><col style="width:140px"><col style="width:120px"><col style="width:120px">
+                            <col style="width:180px"><col style="width:180px"><col style="width:120px"><col style="width:90px">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th title="Full bank name">Bank</th>
+                                <th title="Single or Joint account">S/J</th>
+                                <th title="Saving or Current">Type</th>
+                                <th title="Account opening year">Year</th>
+                                <th>Purpose</th>
+                                <th>Cheque</th>
+                                <th>Passbook</th>
+                                <th>Internet</th>
+                                <th>Phone</th>
+                                <th title="UPI ID">UPI</th>
+                                <th>PhonePe</th>
+                                <th>GPay</th>
+                                <th title="Closing Balance">CB</th>
+                                <th title="Fixed Deposit">FD</th>
+                                <th title="Distance to Bank (km)">Distance (km)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:8px"><button type="button" class="btn" onclick="L2.addBankRow()">+ Add Bank 🏦</button></div>
+            </div>
+
+            <!-- Assets -->
+            <div id="sec-assets" class="card">
+                <h3 style="margin:4px 0 12px 0">Assets (Ask in detail) 💰</h3>
+                <div class="grid">
+                    <div class="col-3 asset-group">
+                        <div class="asset-field">
+                            <label><input id="l2_asset_rd" type="checkbox"> RD</label>
+                            <input class="asset-amt" id="l2_asset_rd_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_mutualFunds" type="checkbox"> Mutual Funds</label>
+                            <input class="asset-amt" id="l2_asset_mutualFunds_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_shares" type="checkbox"> Shares</label>
+                            <input class="asset-amt" id="l2_asset_shares_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_gold" type="checkbox"> Gold</label>
+                            <input class="asset-amt" id="l2_asset_gold_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_diamond" type="checkbox"> Diamond</label>
+                            <input class="asset-amt" id="l2_asset_diamond_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                    </div>
+
+                    <div class="col-3 asset-group">
+                        <div class="asset-field">
+                            <label><input id="l2_asset_silver" type="checkbox"> Silver</label>
+                            <input class="asset-amt" id="l2_asset_silver_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_vehicle" type="checkbox"> Vehicle</label>
+                            <input class="asset-amt" id="l2_asset_vehicle_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_realestate" type="checkbox"> Real estate</label>
+                            <input class="asset-amt" id="l2_asset_realestate_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_cash" type="checkbox"> Cash</label>
+                            <input class="asset-amt" id="l2_asset_cash_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_crypto" type="checkbox"> Crypto</label>
+                            <input class="asset-amt" id="l2_asset_crypto_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                    </div>
+
+                    <div class="col-3 asset-group">
+                        <div class="asset-field">
+                            <label><input id="l2_asset_ppf" type="checkbox"> PPF</label>
+                            <input class="asset-amt" id="l2_asset_ppf_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_pf" type="checkbox"> PF</label>
+                            <input class="asset-amt" id="l2_asset_pf_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-two">
+                            <div class="asset-field">
+                                <label><input id="l2_asset_epf" type="checkbox"> EPF</label>
+                                <input class="asset-amt" id="l2_asset_epf_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                            </div>
+                            <div class="asset-field">
+                                <label><input id="l2_asset_gpf" type="checkbox"> GPF</label>
+                                <input class="asset-amt" id="l2_asset_gpf_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                            </div>
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_coins" type="checkbox"> Coins</label>
+                            <input class="asset-amt" id="l2_asset_coins_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_limitedBooks" type="checkbox"> Limited Books</label>
+                            <input class="asset-amt" id="l2_asset_limitedBooks_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                        <div class="asset-field">
+                            <label><input id="l2_asset_expWatches" type="checkbox"> Exp. Watches</label>
+                            <input class="asset-amt" id="l2_asset_expWatches_amt" type="number" min="0" step="0.01" placeholder="Amount">
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label>Asset Notes</label>
+                        <textarea id="l2_assetNotes" placeholder="Details about assets..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end">
+                <span class="note">Submitting to <b>line 2 data</b></span>
+                <button class="btn" type="button" id="l2_submitAndDownload">Download PDF 📄</button>
+            </div>
+            <div id="status2"></div>
+        </form>
     </div>
 
-    <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end">
-      <span class="note">Submitting to <b>line 2 data</b></span>
-      <button class="btn" type="button" id="l2_submitAndDownload">Download PDF</button>
-    </div>
-    <div id="status2"></div>
-  </form>
-</div>
+    <script>
+        /* =========================
+           CONFIG: set your endpoints
+           ========================= */
+        const SCRIPT_URL_LINE1 = 'https://script.google.com/macros/s/AKfycbzjna6m4tmO2nN3f75P8iSSciwGUrN5CpGiBrjVdRGkCIFeOOyjfKJn6oskR6cnxrwzsw/exec';
+        const SCRIPT_URL_LINE2 = 'https://script.google.com/macros/s/AKfycbyw_04eWrvnHktSpI0iuoutd_Fs3HMfUn6d6gz0xeIJj4OzleSrJOIIWmQNgqSOdmTz/exec';
 
-<script>
-/* =========================
-   CONFIG: set your endpoints
-   ========================= */
-const SCRIPT_URL_LINE1 = 'https://script.google.com/macros/s/AKfycbzjna6m4tmO2nN3f75P8iSSciwGUrN5CpGiBrjVdRGkCIFeOOyjfKJn6oskR6cnxrwzsw/exec';
-const SCRIPT_URL_LINE2 = 'https://script.google.com/macros/s/AKfycbyw_04eWrvnHktSpI0iuoutd_Fs3HMfUn6d6gz0xeIJj4OzleSrJOIIWmQNgqSOdmTz/exec';
-
-/* Tabs */
-document.querySelectorAll('.tab').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('form.card').forEach(f=>f.classList.add('hide'));
-    document.querySelector(btn.dataset.target).classList.remove('hide');
-  });
-});
-
-/* Safe in-form section navigation for Line 2 */
-(function(){
-  const nav = document.querySelector('.l2-nav');
-  if(!nav) return;
-  nav.addEventListener('click', (e)=>{
-    const link = e.target.closest('a[href^="#"]');
-    if(!link) return;
-    e.preventDefault();
-    const target = document.querySelector(link.getAttribute('href'));
-    if(!target) return;
-
-    const line2Form = document.getElementById('tab-line2');
-    if(line2Form.classList.contains('hide')){
-      const line2TabBtn = document.querySelector('.tab[data-target="#tab-line2"]');
-      if(line2TabBtn) line2TabBtn.click();
-      setTimeout(()=> target.scrollIntoView({behavior:'smooth', block:'start'}), 50);
-    }else{
-      target.scrollIntoView({behavior:'smooth', block:'start'});
-    }
-  });
-})();
-
-/* Fill Line 1 IDs: X1, X3, ... X51 (odd numbers) */
-(function(){
-  const sel = document.getElementById('l1_slot');
-  for(let i=1;i<=51;i+=2){ const v='X'+i; sel.add(new Option(v,v)); }
-})();
-
-/* Populate Line2's Line1 (odd X1–X51) / Line2 (even X2–X32) */
-(function(){
-  const l1 = document.getElementById('l2_line1');
-  const l2 = document.getElementById('l2_line2');
-  for(let i=1;i<=51;i+=2){ const id='X'+i; l1.add(new Option(id,id)); }
-  for(let i=2;i<=32;i+=2){ const id='X'+i; l2.add(new Option(id,id)); }
-})();
-
-/* Enhanced glitter effect */
-(function glitter(){
-  const c = document.createElement('canvas');
-  c.id = 'glitter';
-  document.body.appendChild(c);
-  const ctx = c.getContext('2d'); 
-  let w, h, particles = [];
-  
-  function resize(){ 
-    w = c.width = innerWidth; 
-    h = c.height = innerHeight; 
-    particles = Array.from({length: 80}, () => spawn()); 
-  }
-  
-  function spawn(){ 
-    return {
-      x: Math.random()*w,
-      y: Math.random()*h,
-      r: Math.random()*2 + 0.5,
-      a: Math.random()*Math.PI*2,
-      s: Math.random()*0.5 + 0.2,
-      tw: Math.random()*0.05 + 0.01,
-      color: `rgba(255, 255, 255, ${Math.random()*0.5 + 0.2})`
-    }; 
-  }
-  
-  function tick(){ 
-    ctx.clearRect(0,0,w,h); 
-    particles.forEach(p => { 
-      p.x += Math.cos(p.a)*p.s; 
-      p.y += Math.sin(p.a)*p.s;
-      
-      if(p.x < 0 || p.x > w || p.y < 0 || p.y > h) {
-        Object.assign(p, spawn(), {
-          x: (p.x < 0 ? w : (p.x > w ? 0 : p.x)),
-          y: (p.y < 0 ? h : (p.y > h ? 0 : p.y))
+        /* Tabs */
+        document.querySelectorAll('.tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('form.card').forEach(f => f.classList.add('hide'));
+                document.querySelector(btn.dataset.target).classList.remove('hide');
+            });
         });
-      }
-      
-      const glow = 0.6 + Math.sin(performance.now()*p.tw)*0.4; 
-      ctx.beginPath(); 
-      ctx.fillStyle = p.color; 
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); 
-      ctx.fill();
-      
-      // Add glow effect
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r*2, 0, Math.PI*2);
-      const gradient = ctx.createRadialGradient(p.x, p.y, p.r, p.x, p.y, p.r*2);
-      gradient.addColorStop(0, p.color);
-      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = gradient;
-      ctx.fill();
-    });
-    requestAnimationFrame(tick); 
-  }
-  
-  addEventListener('resize', resize); 
-  resize(); 
-  tick();
-})();
 
-/* Utility to send forms */
-async function postTo(url, formData){
-  return fetch(url, { method:'POST', mode:'no-cors', body:new URLSearchParams(formData) });
-}
+        /* Safe in-form section navigation for Line 2 */
+        (function() {
+            const nav = document.querySelector('.l2-nav');
+            if (!nav) return;
+            nav.addEventListener('click', (e) => {
+                const link = e.target.closest('a[href^="#"]');
+                if (!link) return;
+                e.preventDefault();
+                const target = document.querySelector(link.getAttribute('href'));
+                if (!target) return;
 
-/* ------- LINE 1 submit -------- */
-document.getElementById('tab-line1').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const s = document.getElementById('status1');
-  const fd = new FormData(e.target);
-  
-  // Prepare data for Google Apps Script
-  const params = new URLSearchParams();
-  params.append('playerId', fd.get('line1Id') || '');
-  params.append('playerName', fd.get('playerName') || '');
-  params.append('customerName', fd.get('customer') || '');
-  params.append('number', fd.get('number') || '');
-  params.append('language', fd.get('language') || '');
-  params.append('age', fd.get('age') || '');
-  params.append('gender', fd.get('gender') || '');
-  params.append('location', fd.get('location') || '');
-  params.append('profession', fd.get('profession') || '');
-  params.append('remarks', fd.get('remarks') || '');
-  
-  // Clear previous status and show loading
-  s.innerHTML = '';
-  s.className = 'status';
-  s.textContent = 'Submitting to Google Sheets...';
-  
-  // Create a more robust submission with timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-  
-  try {
-    const response = await fetch(SCRIPT_URL_LINE1, {
-      method: 'POST',
-      body: params,
-      signal: controller.signal,
-      mode: 'no-cors' // Important for Google Apps Script
-    });
-    
-    clearTimeout(timeoutId);
-    
-    // Since we're using no-cors, we can't read the response, but we can assume success
-    // if the request doesn't throw an error
-    s.textContent = '✓ Data submitted successfully!';
-    s.className = 'status success';
-    e.target.reset();
-    
-    // Reset status message after 5 seconds
-    setTimeout(() => {
-      s.textContent = '';
-      s.className = 'status';
-    }, 5000);
-    
-  } catch(err) {
-    clearTimeout(timeoutId);
-    console.error('Submission error:', err);
-    
-    if (err.name === 'AbortError') {
-      s.textContent = '⚠ Submission timed out. Please check your connection.';
-    } else {
-      s.textContent = '⚠ Data may have been submitted (check your sheet). If not, please try again.';
-    }
-    s.className = 'status error';
-  }
-});
+                const line2Form = document.getElementById('tab-line2');
+                if (line2Form.classList.contains('hide')) {
+                    const line2TabBtn = document.querySelector('.tab[data-target="#tab-line2"]');
+                    if (line2TabBtn) line2TabBtn.click();
+                    setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+                } else {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        })();
 
-/* ------- LINE 2 helpers -------- */
-const L2 = {
-  tableToArray(tbody, keys){
-    const rows=[]; tbody.querySelectorAll('tr').forEach(tr=>{
-      const inp = tr.querySelectorAll('input,select,textarea');
-      const o={}; keys.forEach((k,i)=>o[k]=inp[i]?inp[i].value:''); rows.push(o);
-    }); return rows;
-  },
-  addFamilyRow(obj={}){
-    const tb=document.querySelector('#l2_familyTable tbody'); const tr=document.createElement('tr');
-    tr.innerHTML = '<td><input placeholder="Member" value="'+(obj.member||'')+'"></td>' +
-      '<td><input type="number" min="0" placeholder="Age" value="'+(obj.age||'')+'"></td>' +
-      '<td><input placeholder="Job" value="'+(obj.job||'')+'"></td>' +
-      '<td><input placeholder="Work/School" value="'+(obj.workTime||'')+'"></td>' +
-      '<td><input placeholder="Home Time" value="'+(obj.homeTime||'')+'"></td>' +
-      '<td><input placeholder="Work Off" value="'+(obj.workOff||'')+'"></td>' +
-      '<td><input placeholder="Remarks" value="'+(obj.remarks||'')+'"></td>' +
-      '<td><input placeholder="Expected Visitors" value="'+(obj.expectedVisitors||'')+'"></td>' +
-      '<td><button type="button" class="btn" onclick="this.closest(`tr`).remove()">Remove</button></td>';
-    tb.appendChild(tr);
-  },
-  addCallRow(obj={}){
-    const tb=document.querySelector('#l2_callTable tbody'); const tr=document.createElement('tr');
-    tr.innerHTML = '<td><input placeholder="Relation" value="'+(obj.relation||'')+'"></td>' +
-      '<td><input type="time" value="'+(obj.time||'')+'"></td>' +
-      '<td><input placeholder="Reason" value="'+(obj.reason||'')+'"></td>' +
-      '<td><input placeholder="Duration" value="'+(obj.duration||'')+'"></td>' +
-      '<td><input placeholder="Platform" value="'+(obj.platform||'')+'"></td>' +
-      '<td><input placeholder="1st" value="'+(obj.c1||'')+'"></td>' +
-      '<td><input placeholder="2nd" value="'+(obj.c2||'')+'"></td>' +
-      '<td><input placeholder="3rd" value="'+(obj.c3||'')+'"></td>' +
-      '<td><input placeholder="4th" value="'+(obj.c4||'')+'"></td>' +
-      '<td><input placeholder="5th" value="'+(obj.c5||'')+'"></td>' +
-      '<td><input placeholder="6th" value="'+(obj.c6||'')+'"></td>' +
-      '<td><button type="button" class="btn" onclick="this.closest(`tr`).remove()">Remove</button></td>';
-    tb.appendChild(tr);
-  },
-  addBankRow(obj={}){
-    const tb=document.querySelector('#l2_bankTable tbody'); const tr=document.createElement('tr');
-    tr.innerHTML = '<td><input placeholder="Bank name" value="'+(obj.name||'')+'"></td>' +
-      '<td><input placeholder="Single/Joint" value="'+(obj.singleJoint||'')+'"></td>' +
-      '<td><input placeholder="Saving/Current" value="'+(obj.type||'')+'"></td>' +
-      '<td><input type="number" min="1900" max="2100" placeholder="Year" value="'+(obj.year||'')+'"></td>' +
-      '<td><input placeholder="Purpose" value="'+(obj.purpose||'')+'"></td>' +
-      '<td><input placeholder="Yes/No" value="'+(obj.chequeBook||'')+'"></td>' +
-      '<td><input placeholder="Yes/No" value="'+(obj.passbook||'')+'"></td>' +
-      '<td><input placeholder="Yes/No" value="'+(obj.internetBanking||'')+'"></td>' +
-      '<td><input placeholder="Yes/No" value="'+(obj.phoneBanking||'')+'"></td>' +
-      '<td><input placeholder="UPI ID" value="'+(obj.upi||'')+'"></td>' +
-      '<td><input placeholder="PhonePe" value="'+(obj.phonepe||'')+'"></td>' +
-      '<td><input placeholder="Google Pay" value="'+(obj.googlepay||'')+'"></td>' +
-      '<td><input placeholder="Closing Bal." value="'+(obj.closingBalance||'')+'"></td>' +
-      '<td><input placeholder="FD" value="'+(obj.fd||'')+'"></td>' +
-      '<td><input placeholder="km" value="'+(obj.distance||'')+'"></td>' +
-      '<td><button type="button" class="btn" onclick="this.closest(`tr`).remove()">Remove</button></td>';
-    tb.appendChild(tr);
-  },
-  bindAssetAmounts(){
-    document.querySelectorAll('#sec-assets .asset-amt').forEach(amt=>{
-      const chkId = amt.id.replace('_amt','');
-      const chk = document.getElementById(chkId);
-      const sync = ()=>{ amt.disabled = !(chk && chk.checked); };
-      if (chk){ chk.addEventListener('change', sync); sync(); }
-    });
-  }
-};
+        /* Fill Line 1 IDs: X1, X3, ... X51 (odd numbers) */
+        (function() {
+            const sel = document.getElementById('l1_slot');
+            for (let i = 1; i <= 51; i += 2) {
+                const v = 'X' + i;
+                sel.add(new Option(v, v));
+            }
+        })();
 
-/* Init Line 2 dynamic rows + assets */
-(function(){
-  L2.addFamilyRow(); L2.addCallRow(); L2.addBankRow(); L2.bindAssetAmounts();
+        /* Populate Line2's Line1 (odd X1–X51) / Line2 (even X2–X32) */
+        (function() {
+            const l1 = document.getElementById('l2_line1');
+            const l2 = document.getElementById('l2_line2');
+            for (let i = 1; i <= 51; i += 2) {
+                const id = 'X' + i;
+                l1.add(new Option(id, id));
+            }
+            for (let i = 2; i <= 32; i += 2) {
+                const id = 'X' + i;
+                l2.add(new Option(id, id));
+            }
+        })();
 
-  document.getElementById('l2_saveDraft').addEventListener('click', ()=>{
-    const form = document.getElementById('tab-line2');
-    const base = Object.fromEntries(new FormData(form).entries());
-    const fam  = L2.tableToArray(document.querySelector('#l2_familyTable tbody'),
-      ['member','age','job','workTime','homeTime','workOff','remarks','expectedVisitors']);
-    const calls= L2.tableToArray(document.querySelector('#l2_callTable tbody'),
-      ['relation','time','reason','duration','platform','c1','c2','c3','c4','c5','c6']);
-    const banks= L2.tableToArray(document.querySelector('#l2_bankTable tbody'),
-      ['name','singleJoint','type','year','purpose','chequeBook','passbook','internetBanking','phoneBanking','upi','phonepe','googlepay','closingBalance','fd','distance']);
-    const assetKeys=['rd','mutualFunds','shares','gold','diamond','silver','vehicle','realestate','cash','crypto','ppf','pf','epf','gpf','coins','limitedBooks','expWatches'];
-    const assets={}; assetKeys.forEach(k=>{
-      const has = (document.getElementById('l2_asset_'+k)||{}).checked || false;
-      const amtEl = document.getElementById('l2_asset_'+k+'_amt'); const amt = amtEl?amtEl.value:'';
-      if (has || amt) assets[k]={has,amount:amt};
-    });
-    localStorage.setItem('alpha_line2_draft', JSON.stringify({base,fam,calls,banks,assets}));
-    
-    // Show success message
-    const s = document.getElementById('status2');
-    s.textContent = '✓ Draft saved successfully!';
-    s.className = 'status success';
-    setTimeout(() => { s.textContent = ''; s.className = 'status'; }, 3000);
-  });
+        /* Enhanced glitter effect */
+        (function glitter() {
+            const c = document.createElement('canvas');
+            c.id = 'glitter';
+            document.body.appendChild(c);
+            const ctx = c.getContext('2d');
+            let w, h, particles = [];
 
-  document.getElementById('l2_loadDraft').addEventListener('click', ()=>{
-    const raw=localStorage.getItem('alpha_line2_draft'); 
-    if(!raw) {
-      const s = document.getElementById('status2');
-      s.textContent = '⚠ No draft found.';
-      s.className = 'status error';
-      setTimeout(() => { s.textContent = ''; s.className = 'status'; }, 3000);
-      return;
-    }
-    
-    const {base={},fam=[],calls=[],banks=[],assets={}} = JSON.parse(raw);
-    const form = document.getElementById('tab-line2');
-    for(const [k,v] of Object.entries(base)){
-      const el = form.elements[k]; if(!el) continue;
-      if(el.type==='checkbox') el.checked=(v==='on'||v===true||v==='true'); else el.value=v;
-    }
-    const fb=document.querySelector('#l2_familyTable tbody'); fb.innerHTML=''; fam.forEach(r=>L2.addFamilyRow(r));
-    const cb=document.querySelector('#l2_callTable tbody'); cb.innerHTML=''; calls.forEach(r=>L2.addCallRow(r));
-    const bb=document.querySelector('#l2_bankTable tbody'); bb.innerHTML=''; banks.forEach(r=>L2.addBankRow(r));
-    Object.entries(assets).forEach(([k,v])=>{
-      const chk=document.getElementById('l2_asset_'+k); const amt=document.getElementById('l2_asset_'+k+'_amt');
-      if(chk) chk.checked=!!v.has; if(amt) amt.value=v.amount||'';
-    });
-    L2.bindAssetAmounts();
-    
-    // Show success message
-    const s = document.getElementById('status2');
-    s.textContent = '✓ Draft loaded successfully!';
-    s.className = 'status success';
-    setTimeout(() => { s.textContent = ''; s.className = 'status'; }, 3000);
-  });
+            function resize() {
+                w = c.width = innerWidth;
+                h = c.height = innerHeight;
+                particles = Array.from({ length: 80 }, () => spawn());
+            }
 
-  document.getElementById('l2_downloadPdf').addEventListener('click', generateLine2PDF);
-  
-  // Make the submit button download PDF instead of submitting
-  document.getElementById('l2_submitAndDownload').addEventListener('click', function(e) {
-    e.preventDefault();
-    generateLine2PDF();
-  });
-})();
+            function spawn() {
+                return {
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    r: Math.random() * 2 + 0.5,
+                    a: Math.random() * Math.PI * 2,
+                    s: Math.random() * 0.5 + 0.2,
+                    tw: Math.random() * 0.05 + 0.01,
+                    color: `rgba(255, 107, 139, ${Math.random() * 0.5 + 0.2})`
+                };
+            }
 
-/* ======== PDF: polished, bold, landscape ======== */
-function generateLine2PDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4', compressPdf:true});
-  const margin = 14;
-  const pageW = doc.internal.pageSize.getWidth();
-  const pageH = doc.internal.pageSize.getHeight();
-  let y = 30;
+            function tick() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(p => {
+                    p.x += Math.cos(p.a) * p.s;
+                    p.y += Math.sin(p.a) * p.s;
 
-  // Header
-  doc.setFont('helvetica','bold'); doc.setFontSize(16);
-  doc.text('Client Information (Line 2)', margin, 16);
-  doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 22);
+                    if (p.x < 0 || p.x > w || p.y < 0 || p.y > h) {
+                        Object.assign(p, spawn(), {
+                            x: (p.x < 0 ? w : (p.x > w ? 0 : p.x)),
+                            y: (p.y < 0 ? h : (p.y > h ? 0 : p.y))
+                        });
+                    }
 
-  // helpers
-  const form = document.getElementById('tab-line2');
-  const v = n => (form.elements[n]?.value || '').trim();
-  const safe = s => (s || '').toString();
+                    const glow = 0.6 + Math.sin(performance.now() * p.tw) * 0.4;
+                    ctx.beginPath();
+                    ctx.fillStyle = p.color;
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fill();
 
-  function addSectionHeader(title){
-    // Bold gradient-like bar effect (dark fill + white text)
-    doc.setFillColor(39, 39, 87);
-    doc.rect(margin, y, pageW - margin*2, 9, 'F');
-    doc.setTextColor(255,255,255);
-    doc.setFont('helvetica','bold'); doc.setFontSize(12);
-    doc.text(title, margin+2, y+6.3);
-    doc.setTextColor(0,0,0);
-    y += 12;
-  }
-  function addDetailsSection(title, rows){
-    const filled = rows.filter(r=>r[1] && String(r[1]).trim()!=='');
-    if(!filled.length) return;
-    addSectionHeader(title);
-    const leftX = margin+2, rightX = margin + (pageW - margin*2)/2 + 10, lineH = 6;
-    doc.setFont('helvetica','normal'); doc.setFontSize(10);
-    let iShown = 0;
-    filled.forEach(r=>{
-      const x = (iShown % 2 === 0) ? leftX : rightX;
-      if(iShown % 2 === 0 && iShown>0) y += lineH;
-      if(y > pageH - 20){ doc.addPage(); y = 20; }
-      doc.setFont('helvetica','bold'); doc.text(`${r[0]}:`, x, y);
-      doc.setFont('helvetica','normal'); doc.text(safe(r[1]), x + 34, y);
-      iShown++;
-    });
-    y += 8;
-  }
+                    // Add glow effect
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r * 2, 0, Math.PI * 2);
+                    const gradient = ctx.createRadialGradient(p.x, p.y, p.r, p.x, p.y, p.r * 2);
+                    gradient.addColorStop(0, p.color);
+                    gradient.addColorStop(1, 'rgba(255, 107, 139, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                });
+                requestAnimationFrame(tick);
+            }
 
-  addDetailsSection('Personal Details', [
-    ['Client Name', v('clientName')], ['Date', v('date')],
-    ['Time', v('time')], ['Language', v('language')],
-    ['Line 1', v('line1')], ['Line 2', v('line2')],
-    ['Line 3', v('line3')], ['Charging (%)', v('charging')],
-    ['Plugin', v('plugin')], ['Current Location', v('currentLocation')],
-    ['Third Party (Y/N)', v('thirdParty')], ['Client DOB', v('dob')],
-    ['Client Age', v('age')], ['Aadhaar Number', v('aadhaar')],
-    ['Gender', v('gender')], ['Marriage (Y/N)', v('marriage')],
-    ['Kids (0–5)', v('kids')], ['Date of Marriage', v('dom')]
-  ]);
+            addEventListener('resize', resize);
+            resize();
+            tick();
+        })();
 
-  addDetailsSection('Contact Information', [
-    ['Number (Y/N)', v('numberActive')], ['WhatsApp (Y/N)', v('whatsapp')],
-    ['Phone Number', v('phone1')], ['2nd Number', v('phone2')],
-    ['Emergency No', v('emergencyNo')], ['E-mail', v('email')]
-  ]);
+        /* Utility to send forms */
+        async function postTo(url, formData) {
+            return fetch(url, { method: 'POST', mode: 'no-cors', body: new URLSearchParams(formData) });
+        }
 
-  addDetailsSection('Education & Employment', [
-    ['Education', v('education')], ['Work (Y/N)', v('workYN')],
-    ['Position', v('position')], ['Employment', v('employment')],
-    ['Working Since', v('workSince')], ['Company Name', v('companyName')],
-    ['Current Address', v('currentAddress')]
-  ]);
+        /* ------- LINE 1 submit -------- */
+        document.getElementById('tab-line1').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const s = document.getElementById('status1');
+            const fd = new FormData(e.target);
 
-  addDetailsSection('Physical Details', [
-    ['Phone Model', v('phoneModel')], ['Other Phone (Y/N)', v('otherPhoneYN')],
-    ['Laptop (Y/N)', v('laptopYN')], ['2-wheeler (Y/N)', v('twoWheelerYN')],
-    ['4-wheeler (Y/N)', v('fourWheelerYN')], ['Total vehicles', v('totalVehicle')],
-    ['Height (cm)', v('height')], ['Weight (kg)', v('weight')],
-    ['Color Tone', v('colorTone')]
-  ]);
+            // Prepare data for Google Apps Script
+            const params = new URLSearchParams();
+            params.append('playerId', fd.get('line1Id') || '');
+            params.append('playerName', fd.get('playerName') || '');
+            params.append('customerName', fd.get('customer') || '');
+            params.append('number', fd.get('number') || '');
+            params.append('language', fd.get('language') || '');
+            params.append('age', fd.get('age') || '');
+            params.append('gender', fd.get('gender') || '');
+            params.append('location', fd.get('location') || '');
+            params.append('profession', fd.get('profession') || '');
+            params.append('remarks', fd.get('remarks') || '');
 
-  addDetailsSection('Identification', [
-    ['Passport (Y/N)', v('passportYN')], ['Voter ID (Y/N)', v('voterIdYN')],
-    ['Place of Birth', v('pob')], ['Nationality', v('nationality')],
-    ['Visa Rejected (Y/N)', v('visaRejected')], ['Overstay (Y/N)', v('overstayYN')]
-  ]);
+            // Clear previous status and show loading
+            s.innerHTML = '';
+            s.className = 'status';
+            s.textContent = 'Submitting to Google Sheets...';
 
-  // Family
-  const fam = L2.tableToArray(document.querySelector('#l2_familyTable tbody'), ['member','age','job','workTime','homeTime','workOff','remarks','expectedVisitors']);
-  if(fam.length){
-    addSectionHeader('Family Members');
-    doc.autoTable({
-      startY:y,
-      head:[["Member","Age","Job","Work/School","Home Time","Work Off","Remarks","Expected Visitors"]],
-      body:fam.map(r=>[r.member,r.age,r.job,r.workTime,r.homeTime,r.workOff,r.remarks,r.expectedVisitors]),
-      styles:{font:'helvetica', fontSize:9, cellPadding:2}, headStyles:{fillColor:[39, 39, 87], textColor:255},
-      theme:'grid', margin:{left:margin, right:margin}
-    });
-    y = doc.lastAutoTable.finalY + 6;
-  }
+            // Create a more robust submission with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-  // Calls
-  const calls = L2.tableToArray(document.querySelector('#l2_callTable tbody'), ['relation','time','reason','duration','platform','c1','c2','c3','c4','c5','c6']);
-  if(calls.length){
-    addSectionHeader('Daily Call Log');
-    doc.autoTable({
-      startY:y,
-      head:[["Relation","Time","Reason","Duration","Platform","1st","2nd","3rd","4th","5th","6th"]],
-      body:calls.map(r=>[r.relation,r.time,r.reason,r.duration,r.platform,r.c1,r.c2,r.c3,r.c4,r.c5,r.c6]),
-      styles:{font:'helvetica', fontSize:9, cellPadding:2}, headStyles:{fillColor:[39, 39, 87], textColor:255},
-      theme:'grid', margin:{left:margin, right:margin}
-    });
-    y = doc.lastAutoTable.finalY + 6;
-  }
+            try {
+                const response = await fetch(SCRIPT_URL_LINE1, {
+                    method: 'POST',
+                    body: params,
+                    signal: controller.signal,
+                    mode: 'no-cors' // Important for Google Apps Script
+                });
 
-  // Banks (with Distance column)
-  const banks = L2.tableToArray(document.querySelector('#l2_bankTable tbody'), ['name','singleJoint','type','year','purpose','chequeBook','passbook','internetBanking','phoneBanking','upi','phonepe','googlepay','closingBalance','fd','distance']);
-  if(banks.length){
-    addSectionHeader('Bank Details');
-    doc.autoTable({
-      startY:y,
-      head:[["Bank","S/J","Type","Year","Purpose","Cheque","Passbook","Internet","Phone","UPI","PhonePe","GPay","CB","FD","Distance (km)"]],
-      body:banks.map(r=>[r.name,r.singleJoint,r.type,r.year,r.purpose,r.chequeBook,r.passbook,r.internetBanking,r.phoneBanking,r.upi,r.phonepe,r.googlepay,r.closingBalance,r.fd,r.distance]),
-      styles:{font:'helvetica', fontSize:9, cellPadding:2}, headStyles:{fillColor:[39, 39, 87], textColor:255},
-      theme:'grid', margin:{left:margin, right:margin}
-    });
-    y = doc.lastAutoTable.finalY + 6;
-  }
+                clearTimeout(timeoutId);
 
-  // Assets (including EPF/GPF)
-  const assetKeys=['rd','mutualFunds','shares','gold','diamond','silver','vehicle','realestate','cash','crypto','ppf','pf','epf','gpf','coins','limitedBooks','expWatches'];
-  const assets=[];
-  assetKeys.forEach(k=>{
-    const chk=document.getElementById('l2_asset_'+k);
-    const amt=document.getElementById('l2_asset_'+k+'_amt');
-    const has = chk && chk.checked ? 'Y' : '';
-    const val = amt ? (amt.value||'') : '';
-    if(has || val){
-      const name = k.replace(/([A-Z])/g,' $1').replace(/^./,m=>m.toUpperCase());
-      assets.push([name, has, val]);
-    }
-  });
-  if(assets.length){
-    addSectionHeader('Assets');
-    doc.autoTable({
-      startY:y,
-      head:[["Asset","Has","Amount"]],
-      body:assets,
-      styles:{font:'helvetica', fontSize:10, cellPadding:3}, headStyles:{fillColor:[39, 39, 87], textColor:255},
-      theme:'grid', margin:{left:margin, right:margin}
-    });
-  }
+                // Since we're using no-cors, we can't read the response, but we can assume success
+                // if the request doesn't throw an error
+                s.textContent = '✓ Data submitted successfully! 🎉';
+                s.className = 'status success';
+                e.target.reset();
 
-  // Footer page numbers
-  const count=doc.internal.getNumberOfPages();
-  for(let i=1;i<=count;i++){
-    doc.setPage(i); doc.setFontSize(8);
-    doc.text(`Page ${i} of ${count}`, pageW-20, pageH-10, {align:'right'});
-  }
+                // Reset status message after 5 seconds
+                setTimeout(() => {
+                    s.textContent = '';
+                    s.className = 'status';
+                }, 5000);
 
-  const client = v('clientName') || 'Client';
-  const d = new Date();
-  const fname = `Line2_${client.replace(/\\s+/g,'_')}_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.pdf`;
-  doc.save(fname);
-}
+            } catch (err) {
+                clearTimeout(timeoutId);
+                console.error('Submission error:', err);
 
-/* ===== util for extracting table rows for old helpers (not needed now, but kept) ===== */
-function tableRows(id){
-  const rows=[];
-  document.querySelectorAll(`#${id} tbody tr`).forEach(tr=>{
-    rows.push([...tr.querySelectorAll('input')].map(i=>i.value));
-  });
-  return rows;
-}
-</script>
+                if (err.name === 'AbortError') {
+                    s.textContent = '⚠ Submission timed out. Please check your connection.';
+                } else {
+                    s.textContent = '⚠ Data may have been submitted (check your sheet). If not, please try again.';
+                }
+                s.className = 'status error';
+            }
+        });
+
+        /* ------- LINE 2 helpers -------- */
+        const L2 = {
+            tableToArray(tbody, keys) {
+                const rows = [];
+                tbody.querySelectorAll('tr').forEach(tr => {
+                    const inp = tr.querySelectorAll('input,select,textarea');
+                    const o = {};
+                    keys.forEach((k, i) => o[k] = inp[i] ? inp[i].value : '');
+                    rows.push(o);
+                });
+                return rows;
+            },
+            addFamilyRow(obj = {}) {
+                const tb = document.querySelector('#l2_familyTable tbody');
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td><input placeholder="Member" value="' + (obj.member || '') + '"></td>' +
+                    '<td><input type="number" min="0" placeholder="Age" value="' + (obj.age || '') + '"></td>' +
+                    '<td><input placeholder="Job" value="' + (obj.job || '') + '"></td>' +
+                    '<td><input placeholder="Work/School" value="' + (obj.workTime || '') + '"></td>' +
+                    '<td><input placeholder="Home Time" value="' + (obj.homeTime || '') + '"></td>' +
+                    '<td><input placeholder="Work Off" value="' + (obj.workOff || '') + '"></td>' +
+                    '<td><input placeholder="Remarks" value="' + (obj.remarks || '') + '"></td>' +
+                    '<td><input placeholder="Expected Visitors" value="' + (obj.expectedVisitors || '') + '"></td>' +
+                    '<td><button type="button" class="btn" onclick="this.closest(`tr`).remove()">Remove</button></td>';
+                tb.appendChild(tr);
+            },
+            addCallRow(obj = {}) {
+                const tb = document.querySelector('#l2_callTable tbody');
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td><input placeholder="Relation" value="' + (obj.relation || '') + '"></td>' +
+                    '<td><input type="time" value="' + (obj.time || '') + '"></td>' +
+                    '<td><input placeholder="Reason" value="' + (obj.reason || '') + '"></td>' +
+                    '<td><input placeholder="Duration" value="' + (obj.duration || '') + '"></td>' +
+                    '<td><input placeholder="Platform" value="' + (obj.platform || '') + '"></td>' +
+                    '<td><input placeholder="1st" value="' + (obj.c1 || '') + '"></td>' +
+                    '<td><input placeholder="2nd" value="' + (obj.c2 || '') + '"></td>' +
+                    '<td><input placeholder="3rd" value="' + (obj.c3 || '') + '"></td>' +
+                    '<td><input placeholder="4th" value="' + (obj.c4 || '') + '"></td>' +
+                    '<td><input placeholder="5th" value="' + (obj.c5 || '') + '"></td>' +
+                    '<td><input placeholder="6th" value="' + (obj.c6 || '') + '"></td>' +
+                    '<td><button type="button" class="btn" onclick="this.closest(`tr`).remove()">Remove</button></td>';
+                tb.appendChild(tr);
+            },
+            addBankRow(obj = {}) {
+                const tb = document.querySelector('#l2_bankTable tbody');
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td><input placeholder="Bank name" value="' + (obj.name || '') + '"></td>' +
+                    '<td><input placeholder="Single/Joint" value="' + (obj.singleJoint || '') + '"></td>' +
+                    '<td><input placeholder="Saving/Current" value="' + (obj.type || '') + '"></td>' +
+                    '<td><input type="number" min="1900" max="2100" placeholder="Year" value="' + (obj.year || '') + '"></td>' +
+                    '<td><input placeholder="Purpose" value="' + (obj.purpose || '') + '"></td>' +
+                    '<td><input placeholder="Yes/No" value="' + (obj.chequeBook || '') + '"></td>' +
+                    '<td><input placeholder="Yes/No" value="' + (obj.passbook || '') + '"></td>' +
+                    '<td><input placeholder="Yes/No" value="' + (obj.internetBanking || '') + '"></td>' +
+                    '<td><input placeholder="Yes/No" value="' + (obj.phoneBanking || '') + '"></td>' +
+                    '<td><input placeholder="UPI ID" value="' + (obj.upi || '') + '"></td>' +
+                    '<td><input placeholder="PhonePe" value="' + (obj.phonepe || '') + '"></td>' +
+                    '<td><input placeholder="Google Pay" value="' + (obj.googlepay || '') + '"></td>' +
+                    '<td><input placeholder="Closing Bal." value="' + (obj.closingBalance || '') + '"></td>' +
+                    '<td><input placeholder="FD" value="' + (obj.fd || '') + '"></td>' +
+                    '<td><input placeholder="km" value="' + (obj.distance || '') + '"></td>' +
+                    '<td><button type="button" class="btn" onclick="this.closest(`tr`).remove()">Remove</button></td>';
+                tb.appendChild(tr);
+            },
+            bindAssetAmounts() {
+                document.querySelectorAll('#sec-assets .asset-amt').forEach(amt => {
+                    const chkId = amt.id.replace('_amt', '');
+                    const chk = document.getElementById(chkId);
+                    const sync = () => { amt.disabled = !(chk && chk.checked); };
+                    if (chk) {
+                        chk.addEventListener('change', sync);
+                        sync();
+                    }
+                });
+            }
+        };
+
+        /* Init Line 2 dynamic rows + assets */
+        (function() {
+            L2.addFamilyRow();
+            L2.addCallRow();
+            L2.addBankRow();
+            L2.bindAssetAmounts();
+
+            document.getElementById('l2_saveDraft').addEventListener('click', () => {
+                const form = document.getElementById('tab-line2');
+                const base = Object.fromEntries(new FormData(form).entries());
+                const fam = L2.tableToArray(document.querySelector('#l2_familyTable tbody'),
+                    ['member', 'age', 'job', 'workTime', 'homeTime', 'workOff', 'remarks', 'expectedVisitors']);
+                const calls = L2.tableToArray(document.querySelector('#l2_callTable tbody'),
+                    ['relation', 'time', 'reason', 'duration', 'platform', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6']);
+                const banks = L2.tableToArray(document.querySelector('#l2_bankTable tbody'),
+                    ['name', 'singleJoint', 'type', 'year', 'purpose', 'chequeBook', 'passbook', 'internetBanking', 'phoneBanking', 'upi', 'phonepe', 'googlepay', 'closingBalance', 'fd', 'distance']);
+                const assetKeys = ['rd', 'mutualFunds', 'shares', 'gold', 'diamond', 'silver', 'vehicle', 'realestate', 'cash', 'crypto', 'ppf', 'pf', 'epf', 'gpf', 'coins', 'limitedBooks', 'expWatches'];
+                const assets = {};
+                assetKeys.forEach(k => {
+                    const has = (document.getElementById('l2_asset_' + k) || {}).checked || false;
+                    const amtEl = document.getElementById('l2_asset_' + k + '_amt');
+                    const amt = amtEl ? amtEl.value : '';
+                    if (has || amt) assets[k] = { has, amount: amt };
+                });
+                localStorage.setItem('alpha_line2_draft', JSON.stringify({ base, fam, calls, banks, assets }));
+
+                // Show success message
+                const s = document.getElementById('status2');
+                s.textContent = '✓ Draft saved successfully! 💾';
+                s.className = 'status success';
+                setTimeout(() => {
+                    s.textContent = '';
+                    s.className = 'status';
+                }, 3000);
+            });
+
+            document.getElementById('l2_loadDraft').addEventListener('click', () => {
+                const raw = localStorage.getItem('alpha_line2_draft');
+                if (!raw) {
+                    const s = document.getElementById('status2');
+                    s.textContent = '⚠ No draft found.';
+                    s.className = 'status error';
+                    setTimeout(() => {
+                        s.textContent = '';
+                        s.className = 'status';
+                    }, 3000);
+                    return;
+                }
+
+                const { base = {}, fam = [], calls = [], banks = [], assets = {} } = JSON.parse(raw);
+                const form = document.getElementById('tab-line2');
+                for (const [k, v] of Object.entries(base)) {
+                    const el = form.elements[k];
+                    if (!el) continue;
+                    if (el.type === 'checkbox') el.checked = (v === 'on' || v === true || v === 'true');
+                    else el.value = v;
+                }
+                const fb = document.querySelector('#l2_familyTable tbody');
+                fb.innerHTML = '';
+                fam.forEach(r => L2.addFamilyRow(r));
+                const cb = document.querySelector('#l2_callTable tbody');
+                cb.innerHTML = '';
+                calls.forEach(r => L2.addCallRow(r));
+                const bb = document.querySelector('#l2_bankTable tbody');
+                bb.innerHTML = '';
+                banks.forEach(r => L2.addBankRow(r));
+                Object.entries(assets).forEach(([k, v]) => {
+                    const chk = document.getElementById('l2_asset_' + k);
+                    const amt = document.getElementById('l2_asset_' + k + '_amt');
+                    if (chk) chk.checked = !!v.has;
+                    if (amt) amt.value = v.amount || '';
+                });
+                L2.bindAssetAmounts();
+
+                // Show success message
+                const s = document.getElementById('status2');
+                s.textContent = '✓ Draft loaded successfully! 📂';
+                s.className = 'status success';
+                setTimeout(() => {
+                    s.textContent = '';
+                    s.className = 'status';
+                }, 3000);
+            });
+
+            document.getElementById('l2_downloadPdf').addEventListener('click', generateLine2PDF);
+
+            // Make the submit button download PDF instead of submitting
+            document.getElementById('l2_submitAndDownload').addEventListener('click', function(e) {
+                e.preventDefault();
+                generateLine2PDF();
+            });
+        })();
+
+        /* ======== PDF: polished, bold, landscape ======== */
+        function generateLine2PDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compressPdf: true });
+            const margin = 14;
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            let y = 30;
+
+            // Header
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            doc.text('Client Information (Line 2)', margin, 16);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 22);
+
+            // helpers
+            const form = document.getElementById('tab-line2');
+            const v = n => (form.elements[n]?.value || '').trim();
+            const safe = s => (s || '').toString();
+
+            function addSectionHeader(title) {
+                // Bold gradient-like bar effect (dark fill + white text)
+                doc.setFillColor(255, 107, 139);
+                doc.rect(margin, y, pageW - margin * 2, 9, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.text(title, margin + 2, y + 6.3);
+                doc.setTextColor(0, 0, 0);
+                y += 12;
+            }
+
+            function addDetailsSection(title, rows) {
+                const filled = rows.filter(r => r[1] && String(r[1]).trim() !== '');
+                if (!filled.length) return;
+                addSectionHeader(title);
+                const leftX = margin + 2,
+                    rightX = margin + (pageW - margin * 2) / 2 + 10,
+                    lineH = 6;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                let iShown = 0;
+                filled.forEach(r => {
+                    const x = (iShown % 2 === 0) ? leftX : rightX;
+                    if (iShown % 2 === 0 && iShown > 0) y += lineH;
+                    if (y > pageH - 20) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${r[0]}:`, x, y);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(safe(r[1]), x + 34, y);
+                    iShown++;
+                });
+                y += 8;
+            }
+
+            addDetailsSection('Personal Details', [
+                ['Client Name', v('clientName')], ['Date', v('date')],
+                ['Time', v('time')], ['Language', v('language')],
+                ['Line 1', v('line1')], ['Line 2', v('line2')],
+                ['Line 3', v('line3')], ['Charging (%)', v('charging')],
+                ['Plugin', v('plugin')], ['Current Location', v('currentLocation')],
+                ['Third Party (Y/N)', v('thirdParty')], ['Client DOB', v('dob')],
+                ['Client Age', v('age')], ['Aadhaar Number', v('aadhaar')],
+                ['Gender', v('gender')], ['Marriage (Y/N)', v('marriage')],
+                ['Kids (0–5)', v('kids')], ['Date of Marriage', v('dom')]
+            ]);
+
+            addDetailsSection('Contact Information', [
+                ['Number (Y/N)', v('numberActive')], ['WhatsApp (Y/N)', v('whatsapp')],
+                ['Phone Number', v('phone1')], ['2nd Number', v('phone2')],
+                ['Emergency No', v('emergencyNo')], ['E-mail', v('email')]
+            ]);
+
+            addDetailsSection('Education & Employment', [
+                ['Education', v('education')], ['Work (Y/N)', v('workYN')],
+                ['Position', v('position')], ['Employment', v('employment')],
+                ['Working Since', v('workSince')], ['Company Name', v('companyName')],
+                ['Current Address', v('currentAddress')]
+            ]);
+
+            addDetailsSection('Physical Details', [
+                ['Phone Model', v('phoneModel')], ['Other Phone (Y/N)', v('otherPhoneYN')],
+                ['Laptop (Y/N)', v('laptopYN')], ['2-wheeler (Y/N)', v('twoWheelerYN')],
+                ['4-wheeler (Y/N)', v('fourWheelerYN')], ['Total vehicles', v('totalVehicle')],
+                ['Height (cm)', v('height')], ['Weight (kg)', v('weight')],
+                ['Color Tone', v('colorTone')]
+            ]);
+
+            addDetailsSection('Identification', [
+                ['Passport (Y/N)', v('passportYN')], ['Voter ID (Y/N)', v('voterIdYN')],
+                ['Place of Birth', v('pob')], ['Nationality', v('nationality')],
+                ['Visa Rejected (Y/N)', v('visaRejected')], ['Overstay (Y/N)', v('overstayYN')]
+            ]);
+
+            // Family
+            const fam = L2.tableToArray(document.querySelector('#l2_familyTable tbody'), ['member', 'age', 'job', 'workTime', 'homeTime', 'workOff', 'remarks', 'expectedVisitors']);
+            if (fam.length) {
+                addSectionHeader('Family Members');
+                doc.autoTable({
+                    startY: y,
+                    head: [
+                        ["Member", "Age", "Job", "Work/School", "Home Time", "Work Off", "Remarks", "Expected Visitors"]
+                    ],
+                    body: fam.map(r => [r.member, r.age, r.job, r.workTime, r.homeTime, r.workOff, r.remarks, r.expectedVisitors]),
+                    styles: { font: 'helvetica', fontSize: 9, cellPadding: 2 },
+                    headStyles: { fillColor: [255, 107, 139], textColor: 255 },
+                    theme: 'grid',
+                    margin: { left: margin, right: margin }
+                });
+                y = doc.lastAutoTable.finalY + 6;
+            }
+
+            // Calls
+            const calls = L2.tableToArray(document.querySelector('#l2_callTable tbody'), ['relation', 'time', 'reason', 'duration', 'platform', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6']);
+            if (calls.length) {
+                addSectionHeader('Daily Call Log');
+                doc.autoTable({
+                    startY: y,
+                    head: [
+                        ["Relation", "Time", "Reason", "Duration", "Platform", "1st", "2nd", "3rd", "4th", "5th", "6th"]
+                    ],
+                    body: calls.map(r => [r.relation, r.time, r.reason, r.duration, r.platform, r.c1, r.c2, r.c3, r.c4, r.c5, r.c6]),
+                    styles: { font: 'helvetica', fontSize: 9, cellPadding: 2 },
+                    headStyles: { fillColor: [255, 107, 139], textColor: 255 },
+                    theme: 'grid',
+                    margin: { left: margin, right: margin }
+                });
+                y = doc.lastAutoTable.finalY + 6;
+            }
+
+            // Banks (with Distance column)
+            const banks = L2.tableToArray(document.querySelector('#l2_bankTable tbody'), ['name', 'singleJoint', 'type', 'year', 'purpose', 'chequeBook', 'passbook', 'internetBanking', 'phoneBanking', 'upi', 'phonepe', 'googlepay', 'closingBalance', 'fd', 'distance']);
+            if (banks.length) {
+                addSectionHeader('Bank Details');
+                doc.autoTable({
+                    startY: y,
+                    head: [
+                        ["Bank", "S/J", "Type", "Year", "Purpose", "Cheque", "Passbook", "Internet", "Phone", "UPI", "PhonePe", "GPay", "CB", "FD", "Distance (km)"]
+                    ],
+                    body: banks.map(r => [r.name, r.singleJoint, r.type, r.year, r.purpose, r.chequeBook, r.passbook, r.internetBanking, r.phoneBanking, r.upi, r.phonepe, r.googlepay, r.closingBalance, r.fd, r.distance]),
+                    styles: { font: 'helvetica', fontSize: 9, cellPadding: 2 },
+                    headStyles: { fillColor: [255, 107, 139], textColor: 255 },
+                    theme: 'grid',
+                    margin: { left: margin, right: margin }
+                });
+                y = doc.lastAutoTable.finalY + 6;
+            }
+
+            // Assets (including EPF/GPF)
+            const assetKeys = ['rd', 'mutualFunds', 'shares', 'gold', 'diamond', 'silver', 'vehicle', 'realestate', 'cash', 'crypto', 'ppf', 'pf', 'epf', 'gpf', 'coins', 'limitedBooks', 'expWatches'];
+            const assets = [];
+            assetKeys.forEach(k => {
+                const chk = document.getElementById('l2_asset_' + k);
+                const amt = document.getElementById('l2_asset_' + k + '_amt');
+                const has = chk && chk.checked ? 'Y' : '';
+                const val = amt ? (amt.value || '') : '';
+                if (has || val) {
+                    const name = k.replace(/([A-Z])/g, ' $1').replace(/^./, m => m.toUpperCase());
+                    assets.push([name, has, val]);
+                }
+            });
+            if (assets.length) {
+                addSectionHeader('Assets');
+                doc.autoTable({
+                    startY: y,
+                    head: [
+                        ["Asset", "Has", "Amount"]
+                    ],
+                    body: assets,
+                    styles: { font: 'helvetica', fontSize: 10, cellPadding: 3 },
+                    headStyles: { fillColor: [255, 107, 139], textColor: 255 },
+                    theme: 'grid',
+                    margin: { left: margin, right: margin }
+                });
+            }
+
+            // Footer page numbers
+            const count = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= count; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.text(`Page ${i} of ${count}`, pageW - 20, pageH - 10, { align: 'right' });
+            }
+
+            const client = v('clientName') || 'Client';
+            const d = new Date();
+            const fname = `Line2_${client.replace(/\s+/g,'_')}_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.pdf`;
+            doc.save(fname);
+        }
+
+        /* ===== util for extracting table rows for old helpers (not needed now, but kept) ===== */
+        function tableRows(id) {
+            const rows = [];
+            document.querySelectorAll(`#${id} tbody tr`).forEach(tr => {
+                rows.push([...tr.querySelectorAll('input')].map(i => i.value));
+            });
+            return rows;
+        }
+    </script>
 </body>
 </html>
