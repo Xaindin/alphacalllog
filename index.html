@@ -705,48 +705,6 @@
             font-style: italic;
         }
         
-        /* Cyber terminal effect */
-        .terminal {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 300px;
-            background: rgba(10, 15, 25, 0.9);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: var(--primary);
-            box-shadow: var(--glow);
-            z-index: 100;
-            display: none;
-        }
-        
-        .terminal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-        }
-        
-        .terminal-content {
-            height: 100px;
-            overflow-y: auto;
-        }
-        
-        .terminal-line {
-            margin: 2px 0;
-            animation: type 0.1s;
-        }
-        
-        @keyframes type {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
         /* Responsive design */
         @media (max-width: 1200px) {
             .grid {
@@ -787,20 +745,6 @@
     <div class="math-overlay" id="mathOverlay"></div>
     
     <div class="particles" id="particles"></div>
-    
-    <!-- Terminal -->
-    <div class="terminal" id="terminal">
-        <div class="terminal-header">
-            <span>SYSTEM TERMINAL</span>
-            <span style="color: var(--accent)">ACTIVE</span>
-        </div>
-        <div class="terminal-content" id="terminalContent">
-            <div class="terminal-line">> Initializing ALPHA Intelligence System...</div>
-            <div class="terminal-line">> Loading client database modules...</div>
-            <div class="terminal-line">> Security protocols: ACTIVE</div>
-            <div class="terminal-line">> Ready for client intake procedure.</div>
-        </div>
-    </div>
 
     <div class="container">
         <!-- Brand header -->
@@ -968,7 +912,6 @@
                         </select>
                     </div>
 
-                    <!-- Continue with all other fields in similar fashion -->
                     <div class="col-3"><label>THIRD PARTY ACCESS</label>
                         <select name="thirdParty">
                             <option value=""></option>
@@ -1315,7 +1258,7 @@
             ];
 
             const mathOverlay = document.getElementById('mathOverlay');
-            formulas.forEach((formula, index) => {
+            formulas.forEach((formula) => {
                 const el = document.createElement('div');
                 el.className = 'formula';
                 el.textContent = formula;
@@ -1336,11 +1279,6 @@
                 particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
                 particlesContainer.appendChild(particle);
             }
-
-            // Show terminal
-            setTimeout(() => {
-                document.getElementById('terminal').style.display = 'block';
-            }, 1000);
         })();
 
         /* Tab navigation */
@@ -1351,7 +1289,7 @@
                 document.querySelectorAll('form.card').forEach(f => f.classList.add('hide'));
                 document.querySelector(btn.dataset.target).classList.remove('hide');
                 
-                // Add terminal log
+                // Add terminal log (now safe no-op)
                 addTerminalLog(`Switched to ${btn.textContent.trim()} module`);
             });
         });
@@ -1403,19 +1341,10 @@
             }
         })();
 
-        /* Terminal log function */
+        /* Terminal log function (now NO UI; safe no-op) */
         function addTerminalLog(message) {
-            const terminal = document.getElementById('terminalContent');
-            const line = document.createElement('div');
-            line.className = 'terminal-line';
-            line.textContent = `> ${message}`;
-            terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
-            
-            // Limit to 10 lines
-            if (terminal.children.length > 10) {
-                terminal.removeChild(terminal.children[0]);
-            }
+            // Terminal removed intentionally. Keep this for compatibility.
+            return;
         }
 
         /* Utility to send forms */
@@ -1454,7 +1383,7 @@
             const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             try {
-                const response = await fetch(SCRIPT_URL_LINE1, {
+                await fetch(SCRIPT_URL_LINE1, {
                     method: 'POST',
                     body: params,
                     signal: controller.signal,
@@ -1821,7 +1750,7 @@
             addTerminalLog(`Intelligence report generated: ${fname}`);
         }
 
-        /* Initialize terminal log */
+        /* Initialize terminal log (no UI now) */
         addTerminalLog('ALPHA Cyber Intelligence System v2.0 initialized');
         addTerminalLog('All security protocols active');
         addTerminalLog('Ready for client intake operations');
