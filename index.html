@@ -780,106 +780,30 @@
     </div>
 
     <script>
-    // ✅ YOUR GOOGLE SCRIPT URL
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDNkIV0e0bwaEwIIbzdpkN3iI2HVHsGXwAioljl7EOCSyiMORBmp_bsAY02k80JQHbAQ/exec';
+        // ✅ YOUR GOOGLE SCRIPT URL
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDNkIV0e0bwaEwIIbzdpkN3iI2HVHsGXwAioljl7EOCSyiMORBmp_bsAY02k80JQHbAQ/exec';
 
-    // ✅ USERNAME + PASSWORD SYSTEM
-    const AUTHORIZED_USERS = {
-        'DataCloud1': 'Alpha1@123',
-        'DataCloud2': 'Alpha2@123',
-        'DataCloud3': 'Alpha3@123',
-        'DataCloud4': 'Alpha4@123',
-        'DataCloud5': 'Alpha5@123',
-        'DataCloud6': 'Alpha6@123',
-        'DataCloud7': 'Alpha7@123',
-        'DataCloud8': 'Alpha8@123',
-        'DataCloud9': 'Alpha9@123',
-        'DataCloud10': 'Alpha10@123'
-    };
+        const AUTHORIZED_USERS = [
+            'DataCloud1', 'DataCloud2', 'DataCloud3', 'DataCloud4', 'DataCloud5',
+            'DataCloud6', 'DataCloud7', 'DataCloud8', 'DataCloud9', 'DataCloud10'
+        ];
+        const PASSWORD = 'Alpha1234';
+        
+        const PKR_PER_ENTRY = 4;
 
-    const PKR_PER_ENTRY = 4;
-
-    // ✅ LOGIN VALIDATION FUNCTION
-    function validateLogin(username, password) {
-        if (!AUTHORIZED_USERS[username]) {
-            return false; // username not found
-        }
-
-        if (AUTHORIZED_USERS[username] !== password) {
-            return false; // wrong password
-        }
-
-        return true; // success
-    }
-
-    // ✅ CLEAR OLD LOCAL STORAGE
-    (function clearAllPreviousData() {
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (
-                key.includes('_entryCount') ||
-                key.includes('_entries') ||
-                key.includes('_nextVerification') ||
-                key.includes('_requiresVerification') ||
-                key.includes('_withdrawals')
-            ) {
-                keysToRemove.push(key);
+        (function clearAllPreviousData() {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.includes('_entryCount') || key.includes('_entries') || 
+                    key.includes('_nextVerification') || key.includes('_requiresVerification') ||
+                    key.includes('_withdrawals')) {
+                    keysToRemove.push(key);
+                }
             }
-        }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-    })();
-<script>
-    // ✅ YOUR GOOGLE SCRIPT URL
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDNkIV0e0bwaEwIIbzdpkN3iI2HVHsGXwAioljl7EOCSyiMORBmp_bsAY02k80JQHbAQ/exec';
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+        })();
 
-    // ✅ USERNAME + PASSWORD SYSTEM
-    const AUTHORIZED_USERS = {
-        'DataCloud1': 'Alpha1@123',
-        'DataCloud2': 'Alpha2@123',
-        'DataCloud3': 'Alpha3@123',
-        'DataCloud4': 'Alpha4@123',
-        'DataCloud5': 'Alpha5@123',
-        'DataCloud6': 'Alpha6@123',
-        'DataCloud7': 'Alpha7@123',
-        'DataCloud8': 'Alpha8@123',
-        'DataCloud9': 'Alpha9@123',
-        'DataCloud10': 'Alpha10@123'
-    };
-
-    const PKR_PER_ENTRY = 4;
-
-    // ✅ LOGIN VALIDATION FUNCTION
-    function validateLogin(username, password) {
-        if (!AUTHORIZED_USERS[username]) {
-            return false; // username not found
-        }
-
-        if (AUTHORIZED_USERS[username] !== password) {
-            return false; // wrong password
-        }
-
-        return true; // success
-    }
-
-    // ✅ CLEAR OLD LOCAL STORAGE
-    (function clearAllPreviousData() {
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (
-                key.includes('_entryCount') ||
-                key.includes('_entries') ||
-                key.includes('_nextVerification') ||
-                key.includes('_requiresVerification') ||
-                key.includes('_withdrawals')
-            ) {
-                keysToRemove.push(key);
-            }
-        }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-    })();
-</script>
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('loginBtn').addEventListener('click', handleLogin);
             document.getElementById('username').addEventListener('keypress', e => e.key === 'Enter' && handleLogin());
