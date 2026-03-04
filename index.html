@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* [All your existing CSS styles remain exactly the same] */
         * {
             margin: 0;
             padding: 0;
@@ -783,11 +784,19 @@
         // ✅ YOUR GOOGLE SCRIPT URL
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDNkIV0e0bwaEwIIbzdpkN3iI2HVHsGXwAioljl7EOCSyiMORBmp_bsAY02k80JQHbAQ/exec';
 
-        const AUTHORIZED_USERS = [
-            'DataCloud1', 'DataCloud2', 'DataCloud3', 'DataCloud4', 'DataCloud5',
-            'DataCloud6', 'DataCloud7', 'DataCloud8', 'DataCloud9', 'DataCloud10'
-        ];
-        const PASSWORD = 'Alpha1234';
+        // ✅ AUTHORIZED USERS WITH INDIVIDUAL PASSWORDS
+        const AUTHORIZED_USERS = {
+            'AsfandAlpha1': 'Alpha#X7Power',
+            'AsfandAlpha2': 'Alpha@2026!',
+            'AsfandAlpha3': 'Alpha$Secure99',
+            'AsfandAlpha4': 'Alpha!Master07',
+            'AsfandAlpha5': 'Alpha@Holic77',
+            'SanduAlpha': 'Alpha#Control24',
+            'NabeelAlpha': 'Alpha!PrimeX9',
+            'TahreemAlpha': 'Alpha@infinity88',
+            'KhushbakhAlpha': 'Alpha#EliteX21',
+            'DataCloud10': 'Kappa4560'
+        };
         
         const PKR_PER_ENTRY = 4;
 
@@ -824,14 +833,20 @@
             }, 30000);
         });
 
+        // ✅ UPDATED: handleLogin function - ab purani withdrawal requests clear hongi
         function handleLogin() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
-            if (AUTHORIZED_USERS.includes(username) && password === PASSWORD) {
+            // ✅ Check if user exists and password matches
+            if (AUTHORIZED_USERS[username] && AUTHORIZED_USERS[username] === password) {
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('loggedInUser', username);
                 localStorage.setItem(`${username}_entryCount`, '0');
+                
+                // ✅ NEW: Clear previous withdrawal requests for this user
+                localStorage.removeItem(`${username}_withdrawals`);
+                console.log(`🧹 Cleared previous withdrawal requests for ${username}`);
                 
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('mainContainer').classList.add('show');
@@ -870,7 +885,6 @@
             }
         }
 
-        // ===== UPDATED: loadDashboardData with Google Sheet data =====
         async function loadDashboardData(username) {
             if (!username) return;
             
@@ -885,22 +899,18 @@
                     document.getElementById('balanceDisplay').textContent = balance + ' PKR';
                     document.getElementById('entriesCount').textContent = `(${totalEntries} entries)`;
                     
-                    // Update withdrawal history from Google Sheets
                     if (data.withdrawals) {
                         displayWithdrawalHistory(data.withdrawals);
                     }
                     
-                    // Update recent entries
                     if (data.recentEntries) {
                         displayRecentEntries(data.recentEntries);
                     }
                     
-                    // Check withdrawal eligibility from Google Sheets data
                     await checkWithdrawalEligibility(username);
                 }
             } catch (error) {
                 console.log('Error fetching from Google Sheets:', error);
-                // Fallback to localStorage
                 const entries = JSON.parse(localStorage.getItem(`${username}_entries`) || '[]');
                 const totalEntries = entries.length;
                 const balance = totalEntries * PKR_PER_ENTRY;
@@ -913,7 +923,6 @@
             }
         }
 
-        // ===== UPDATED: checkWithdrawalEligibility using Google Sheet data =====
         async function checkWithdrawalEligibility(username) {
             const withdrawBtn = document.getElementById('withdrawBtn');
             const warning1 = document.getElementById('warning1');
@@ -927,7 +936,6 @@
                     const withdrawals = data.withdrawals;
                     const thisMonth = new Date().toISOString().slice(0,7);
                     
-                    // Count only this month's withdrawals (ALL statuses)
                     const monthlyCount = withdrawals.filter(w => {
                         const wDate = Array.isArray(w) ? w[2] : w.date;
                         return wDate && wDate.slice(0,7) === thisMonth;
@@ -935,9 +943,7 @@
                     
                     document.getElementById('withdrawalsCount').textContent = monthlyCount + '/3';
                     
-                    // Check last withdrawal date for 7-day gap
                     if (withdrawals.length > 0) {
-                        // Sort withdrawals by date (newest first)
                         const sortedWithdrawals = [...withdrawals].sort((a, b) => {
                             const dateA = Array.isArray(a) ? new Date(a[2]) : new Date(a.date);
                             const dateB = Array.isArray(b) ? new Date(b[2]) : new Date(b.date);
@@ -971,12 +977,10 @@
                 }
             } catch (error) {
                 console.log('Error fetching withdrawal data:', error);
-                // Fallback to localStorage
                 fallbackWithdrawalCheck(username);
             }
         }
 
-        // ===== FALLBACK: localStorage se check karo agar Google Sheet fail ho jaye =====
         function fallbackWithdrawalCheck(username) {
             const withdrawBtn = document.getElementById('withdrawBtn');
             const warning1 = document.getElementById('warning1');
@@ -1015,18 +1019,15 @@
             }
         }
 
-        // ===== UPDATED: displayWithdrawalHistory =====
         function displayWithdrawalHistory(data) {
             const list = document.getElementById('withdrawalHistory');
             if (!list) return;
             
             let withdrawals = [];
             
-            // Check if data is array (from Google Sheets) or string (username)
             if (Array.isArray(data)) {
                 withdrawals = data;
             } else {
-                // It's a username, get from localStorage
                 withdrawals = JSON.parse(localStorage.getItem(`${data}_withdrawals`) || '[]');
             }
             
@@ -1040,12 +1041,10 @@
                 let date, amount, status;
                 
                 if (Array.isArray(w)) {
-                    // Data from Google Sheets
                     date = new Date(w[2]).toLocaleDateString('en-PK');
                     amount = w[3] || 0;
                     status = w[9] || 'Pending';
                 } else {
-                    // Data from localStorage
                     date = new Date(w.date).toLocaleDateString('en-PK');
                     amount = w.amount || 0;
                     status = w.status || 'Pending';
@@ -1138,7 +1137,6 @@
                         body: params
                     });
                     
-                    // Save locally for immediate display
                     const withdrawals = JSON.parse(localStorage.getItem(`${username}_withdrawals`) || '[]');
                     withdrawals.push({
                         date: new Date().toISOString(),
